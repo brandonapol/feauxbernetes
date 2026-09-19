@@ -1,0 +1,219 @@
+import type { GameEvent } from '../events'
+import type { GameState, ReduceResult } from '../game'
+import { applyEffect } from './effects'
+import type { Chapter, Effect, GameConfig, Step } from './types'
+
+/**
+ * A learner "attempt" that can miss: a multiple-choice pick, or a click on a highlighted target.
+ * Everything else (opening a tab, replying in Flack, …) never counts against the learner.
+ */
+const ATTEMPT_EVENTS = new Set<GameEvent['type']>(['optionChosen', 'targetClicked'])
+
+/** After this many misses, the Hint button pulses. */
+export const PULSE_AFTER_MISSES = 2
+/** After this many misses, the first hint appears on its own. */
+export const AUTO_HINT_AFTER_MISSES = 4
+
+const MAX_EVENTS = 500
+
+export function currentChapter(config: GameConfig, state: GameState): Chapter | undefined {
+  return config.chapters.find((chapter) => chapter.id === state.story.chapterId)
+}
+
+export function currentStep(config: GameConfig, state: GameState): Step | undefined {
+  if (state.story.phase !== 'playing') return undefined
+  return currentChapter(config, state)?.steps[state.story.stepIndex]
+}
+
+export function shouldPulseHint(state: GameState): boolean {
+  return state.story.phase === 'playing' && state.story.misses >= PULSE_AFTER_MISSES
+}
+
+/** The current step plus any steps reachable by skipping optional ones. */
+function candidateIndexes(chapter: Chapter, from: number): number[] {
+  const indexes: number[] = []
+  for (let i = from; i < chapter.steps.length; i++) {
+    indexes.push(i)
+    if (!chapter.steps[i].optional) break
+  }
+  return indexes
+}
+
+/** Moves the story to `stepIndex`, finishing the chapter if that's past its last step. */
+function moveTo(state: GameState, chapter: Chapter, stepIndex: number): GameState {
+  const finished = stepIndex >= chapter.steps.length
+  return {
+    ...state,
+    story: {
+      ...state.story,
+      stepIndex,
+      misses: 0,
+      hintsShown: 0,
+      solutionShown: false,
+      lastWrongAnswer: undefined,
+      ...(finished
+        ? {
+            phase: 'complete' as const,
+            completedChapters: state.story.completedChapters.includes(chapter.id)
+              ? state.story.completedChapters
+              : [...state.story.completedChapters, chapter.id],
+          }
+        : {}),
+    },
+  }
+}
+
+function completeStep(
+  state: GameState,
+  chapter: Chapter,
+  index: number,
+  event: GameEvent
+): { state: GameState; effects: Effect[]; events: GameEvent[] } {
+  const step = chapter.steps[index]
+  const skipped = chapter.steps.slice(state.story.stepIndex, index).map((s) => s.id)
+  const applied: GameState = step.apply ? step.apply(state, event) : state
+  const stepIndex = index + 1
+  const finished = stepIndex >= chapter.steps.length
+  const next = moveTo(
+    {
+      ...applied,
+      story: {
+        ...applied.story,
+        completedSteps: [...applied.story.completedSteps, step.id],
+        skippedSteps: [...applied.story.skippedSteps, ...skipped],
+      },
+    },
+    chapter,
+    stepIndex
+  )
+  const effects = [...(step.onComplete ?? [])]
+  const events: GameEvent[] = []
+  if (!finished) {
+    const upcoming = chapter.steps[stepIndex]
+    effects.push(...(upcoming.onEnter ?? []))
+    events.push({ type: 'stepEntered', stepId: upcoming.id })
+  }
+  return { state: next, effects, events }
+}
+
+function checkEvent(
+  config: GameConfig,
+  state: GameState,
+  event: GameEvent
+): { state: GameState; effects: Effect[]; events: GameEvent[] } {
+  const chapter = currentChapter(config, state)
+  if (!chapter || state.story.phase !== 'playing') return { state, effects: [], events: [] }
+
+  for (const index of candidateIndexes(chapter, state.story.stepIndex)) {
+    if (chapter.steps[index].goal(state, event)) {
+      return completeStep(state, chapter, index, event)
+    }
+  }
+
+  const step = chapter.steps[state.story.stepIndex]
+  const reactions = (step?.reactions ?? []).filter(
+    (reaction) =>
+      !state.story.firedReactions.includes(`${step.id}:${reaction.id}`) &&
+      reaction.when(state, event)
+  )
+  if (reactions.length > 0) {
+    return {
+      state: {
+        ...state,
+        story: {
+          ...state.story,
+          firedReactions: [
+            ...state.story.firedReactions,
+            ...reactions.map((reaction) => `${step.id}:${reaction.id}`),
+          ],
+        },
+      },
+      effects: reactions.flatMap((reaction) => reaction.effects),
+      events: [],
+    }
+  }
+
+  if (ATTEMPT_EVENTS.has(event.type)) {
+    const misses = state.story.misses + 1
+    const hintsShown =
+      misses >= AUTO_HINT_AFTER_MISSES && step.hints.length > 0
+        ? Math.max(state.story.hintsShown, 1)
+        : state.story.hintsShown
+    const wrongAnswer =
+      event.type === 'optionChosen' && step?.wrongAnswers?.[event.optionId] !== undefined
+        ? { stepId: step.id, optionId: event.optionId, response: step.wrongAnswers[event.optionId] }
+        : undefined
+    return {
+      state: {
+        ...state,
+        story: { ...state.story, misses, hintsShown, lastWrongAnswer: wrongAnswer },
+      },
+      effects: [],
+      events: [],
+    }
+  }
+  return { state, effects: [], events: [] }
+}
+
+/**
+ * Applies effects and walks events through the current step's goal, in order. Completing a step
+ * can apply more effects and raise more events (a coworker's reply, the next step being entered),
+ * which are processed in the same pass. Delayed effects are returned for the store to schedule.
+ */
+export function advanceStory(
+  config: GameConfig,
+  initial: GameState,
+  initialEvents: GameEvent[],
+  initialEffects: Effect[] = []
+): ReduceResult {
+  let state = initial
+  const queue: GameEvent[] = []
+  const delayed: Effect[] = []
+
+  const runEffects = (effects: Effect[]) => {
+    for (const effect of effects) {
+      if (effect.delayMs && effect.delayMs > 0) {
+        delayed.push(effect)
+        continue
+      }
+      const result = applyEffect(config, state, effect)
+      state = result.state
+      queue.push(...result.events)
+    }
+  }
+
+  queue.push(...initialEvents)
+  runEffects(initialEffects)
+
+  let processed = 0
+  while (queue.length > 0) {
+    if (++processed > MAX_EVENTS) throw new Error('Story runner: too many events (a goal loop?)')
+    const event = queue.shift()!
+    const result = checkEvent(config, state, event)
+    state = result.state
+    runEffects(result.effects)
+    queue.push(...result.events)
+  }
+
+  return { state, effects: delayed }
+}
+
+/** Runs the current step's `onEnter` effects and checks whether it's already satisfied. */
+export function enterStep(config: GameConfig, state: GameState): ReduceResult {
+  const step = currentStep(config, state)
+  if (!step) return { state, effects: [] }
+  return advanceStory(config, state, [{ type: 'stepEntered', stepId: step.id }], step.onEnter ?? [])
+}
+
+/** "Skip this step" on an optional step: move on without doing it. */
+export function skipStep(config: GameConfig, state: GameState): ReduceResult {
+  const chapter = currentChapter(config, state)
+  const step = currentStep(config, state)
+  if (!chapter || !step?.optional || state.story.phase !== 'playing') return { state, effects: [] }
+  const next = moveTo(
+    { ...state, story: { ...state.story, skippedSteps: [...state.story.skippedSteps, step.id] } },
+    chapter,
+    state.story.stepIndex + 1
+  )
+  return next.story.phase === 'complete' ? { state: next, effects: [] } : enterStep(config, next)
+}
