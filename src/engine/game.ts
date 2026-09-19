@@ -1,3 +1,13 @@
+import {
+  crashCopy as crashClusterCopy,
+  createCluster,
+  reconcile,
+  setBox as setClusterBox,
+  setWish as setClusterWish,
+  unplugCopy as unplugClusterCopy,
+  type ClusterEvent,
+  type ClusterState,
+} from './cluster'
 import type { Tab } from './events'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
@@ -7,14 +17,13 @@ export const GAME_STATE_VERSION = 1
 /**
  * Placeholder engine state slots.
  *
- * `cluster`, `gitops`, `ci`, `telemetry`, `testlab` and `incident` are being built in parallel
- * (tickets #6, #7, #8, #9, #30, #31). Until each lands, its slot on `GameState` is this empty
- * shape. Swapping a slot for the real thing is a one-line change in this file: replace the
+ * `gitops`, `ci`, `telemetry`, `testlab` and `incident` are being built in parallel (tickets #7,
+ * #8, #9, #30, #31). Until each lands, its slot on `GameState` is this empty shape. Swapping a
+ * slot for the real thing is a one-line change in this file: replace the
  * `type X = Record<string, never>` below with `import type { XState as X } from './x'`, and give
- * `blankState` its real initial value.
+ * `blankState` its real initial value. `cluster` (#6) was the first to be wired in, in #4, since
+ * the reconcile loop runs on the clock the store owns.
  */
-// TODO(#6): swap for the cluster engine's real state (boxes, copies, wishes).
-type ClusterState = Record<string, never>
 // TODO(#7): swap for the GitOps engine's real state (config repo, app repos, Argh CD apps).
 type GitOpsState = Record<string, never>
 // TODO(#8): swap for the CI engine's real state (pipelines, jobs, test reports).
@@ -78,6 +87,8 @@ export interface GameState {
   }
   story: StoryState
   cluster: ClusterState
+  /** Cluster events from `reconcile`, oldest first, for the Ops Console (#13) feed. */
+  clusterEvents: ClusterEvent[]
   gitops: GitOpsState
   ci: CiState
   telemetry: TelemetryState
@@ -86,11 +97,12 @@ export interface GameState {
 }
 
 /**
- * What the learner (or a scheduled effect) makes happen. This union is open: as each sub-engine
- * lands (cluster #6, gitops #7, ci #8, telemetry #9, testlab #30, incident #31) it adds its own
- * action variants here (e.g. `chooseWish`, `syncApp`, `dropTestStep`, `ackPage`), and `reduce`
- * grows a case that routes to that engine's own reduce function. For now, only the actions every
- * chapter needs are defined.
+ * What the learner (or a scheduled effect, or the store's clock) makes happen. This union is
+ * open: as each remaining sub-engine lands (gitops #7, ci #8, telemetry #9, testlab #30, incident
+ * #31) it adds its own action variants here (e.g. `syncApp`, `dropTestStep`, `ackPage`), and
+ * `reduce` grows a case that routes to that engine's own reduce function. The cluster engine (#6)
+ * was wired in first, in #4: `tick` and the `chooseWish`/`unplugCopy`/`setBox`/`crashCopy` wishes
+ * the Ops Console (#13) will dispatch.
  */
 export type Action =
   /** Answers a multiple-choice question — the workhorse action for every quiz-shaped step. */
@@ -113,6 +125,19 @@ export type Action =
   | { type: 'continueStory' }
   /** An optional step the learner chose not to do. */
   | { type: 'skipStep' }
+  /**
+   * Advances the fake clock by `deltaMs` and runs one cluster `reconcile` pass. Dispatched by the
+   * store on a real interval (see `store/gameStore.ts`); never dispatched by the UI directly.
+   */
+  | { type: 'tick'; deltaMs: number }
+  /** The Ops Console "Make it so": ask the cluster to run `copies` of `app`@`version`. */
+  | { type: 'chooseWish'; app: string; version: string; copies: number }
+  /** The Ops Console "pretend it crashed": unplug a copy outright, no graceful stop. */
+  | { type: 'unplugCopy'; copyId: string }
+  /** The Ops Console "turn off box B": flips a box on or off. */
+  | { type: 'setBox'; boxId: string; on: boolean }
+  /** A scripted scenario crashes a copy in place; `reconcile` restarts it. */
+  | { type: 'crashCopy'; copyId: string }
 
 export interface ReduceResult {
   state: GameState
@@ -122,6 +147,19 @@ export interface ReduceResult {
 
 /** Fake seconds that pass per action, so messages get plausible, increasing timestamps. */
 const TICK = 20
+
+/**
+ * A cluster with nothing on it: no boxes, no wishes. Real content isn't wired up until #10, so
+ * every chapter's `setup` builds its own starting cluster (boxes, database, wishes) from there;
+ * this is only what a brand-new game (or a mid-jump reset) needs to be valid in the meantime.
+ */
+function blankCluster(): ClusterState {
+  return createCluster({
+    boxes: [],
+    database: { version: '1.0', health: 'Healthy' },
+    config: { startupMs: 3000, stopMs: 2000, versionBehaviour: {} },
+  })
+}
 
 export function blankState(config: GameConfig): GameState {
   return {
@@ -147,7 +185,8 @@ export function blankState(config: GameConfig): GameState {
       hintsShown: 0,
       solutionShown: false,
     },
-    cluster: {},
+    cluster: blankCluster(),
+    clusterEvents: [],
     gitops: {},
     ci: {},
     telemetry: {},
@@ -195,7 +234,33 @@ export function startChapter(config: GameConfig, from: GameState, chapterId: str
   return enterStep(config, withCheckpoint)
 }
 
+/**
+ * The one clock to rule them all: advances `clock.now` by `deltaMs` (real time, scaled by the
+ * store for `?fast=1`, and not advanced at all while the store is paused — see
+ * `store/gameStore.ts`) and runs one cluster `reconcile` pass at the new time. Every other engine
+ * that grows its own clock-driven loop (gitops' sync poll, telemetry's alert evaluation, …) will
+ * get its pass added here too.
+ */
+function tick(config: GameConfig, previous: GameState, deltaMs: number): ReduceResult {
+  const now = previous.clock.now + deltaMs
+  const { cluster, events } = reconcile(previous.cluster, now)
+  const state: GameState = {
+    ...previous,
+    clock: { now },
+    cluster,
+    // Kept in full while playing (it's a scrollback feed); the store trims it for storage.
+    clusterEvents: [...previous.clusterEvents, ...events],
+  }
+  return advanceStory(
+    config,
+    state,
+    events.map((event) => ({ type: 'clusterEvent', event }))
+  )
+}
+
 export function reduce(config: GameConfig, previous: GameState, action: Action): ReduceResult {
+  if (action.type === 'tick') return tick(config, previous, action.deltaMs)
+
   const state: GameState = { ...previous, clock: { now: previous.clock.now + TICK } }
 
   switch (action.type) {
@@ -290,6 +355,38 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
         return { state: { ...state, story: { ...state.story, phase: 'finished' } }, effects: [] }
       }
       return startChapter(config, state, next.id)
+    }
+
+    case 'chooseWish': {
+      const cluster = setClusterWish(
+        state.cluster,
+        { app: action.app, version: action.version, copies: action.copies },
+        state.clock.now
+      )
+      return advanceStory(config, { ...state, cluster }, [
+        { type: 'wishChosen', app: action.app, version: action.version, copies: action.copies },
+      ])
+    }
+
+    case 'unplugCopy': {
+      const cluster = unplugClusterCopy(state.cluster, action.copyId)
+      return advanceStory(config, { ...state, cluster }, [
+        { type: 'copyUnplugged', copyId: action.copyId },
+      ])
+    }
+
+    case 'setBox': {
+      const cluster = setClusterBox(state.cluster, action.boxId, action.on)
+      return advanceStory(config, { ...state, cluster }, [
+        { type: 'boxToggled', boxId: action.boxId, on: action.on },
+      ])
+    }
+
+    case 'crashCopy': {
+      const cluster = crashClusterCopy(state.cluster, action.copyId, state.clock.now)
+      return advanceStory(config, { ...state, cluster }, [
+        { type: 'copyCrashed', copyId: action.copyId },
+      ])
     }
   }
 }
