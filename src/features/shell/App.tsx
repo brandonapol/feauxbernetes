@@ -1,5 +1,18 @@
-// Placeholder shell so the build, unit tests and E2E have something to hit. The real app
-// shell (routing, layout, the three-column experience) lands in #5.
-export function App() {
-  return <p>Feauxbernetes</p>
+import { HashRouter, Route, Routes } from 'react-router'
+
+import { GameStoreProvider, type GameStore } from '../../store'
+import { Layout } from './Layout'
+
+/** The app shell: a `HashRouter` (so deep links survive a reload on a static host, ticket #2)
+ * wrapping the three-column `Layout`. See #5. */
+export function App({ store }: { store: GameStore }) {
+  return (
+    <GameStoreProvider store={store}>
+      <HashRouter>
+        <Routes>
+          <Route path="*" element={<Layout />} />
+        </Routes>
+      </HashRouter>
+    </GameStoreProvider>
+  )
 }

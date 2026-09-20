@@ -1,12 +1,61 @@
 :root {
   color-scheme: light dark;
-}
 
-body {
-  margin: 0;
+  /* Neutral chrome shared by every panel. Individual fake apps (Flack #12, GitNub #15, …) add
+     their own tokens once they land. */
+  --paper: #fbfaf7;
+  --surface: #ffffff;
+  --chrome: #eef0f3;
+  --chrome-hover: #e2e5ea;
+  --border: #dcdfe4;
+  --border-strong: #c4c8cf;
+  --text: #1d2127;
+  --text-muted: #59606b;
+  --accent: #3b5bdb;
+  --accent-text: #ffffff;
+  --focus: #3b5bdb;
+  --danger: #d6336c;
+  --success: #2b8a3e;
+  --overlay-backdrop: rgb(15 17 21 / 55%);
+
+  --font-mono: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace;
+
   font-family:
     system-ui,
     -apple-system,
     'Segoe UI',
     sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
