@@ -42,6 +42,17 @@ describe('Browser', () => {
     expect(window.location.hash).toBe('#/flack/platform')
   })
 
+  it('clicking a DM in the sidebar opens that channel in the URL (#89)', async () => {
+    const user = userEvent.setup()
+    renderApp('', ['flack'])
+    await user.click(screen.getByRole('button', { name: /Kai Nakamura/ }))
+    expect(window.location.hash).toBe('#/flack/dm-kai')
+    expect(screen.getByRole('button', { name: /Kai Nakamura/ })).toHaveAttribute(
+      'aria-current',
+      'true'
+    )
+  })
+
   it('a deep link to an unlocked tab opens it', async () => {
     const store = renderApp('#/argh-cd', ['flack', 'arghcd'])
     expect(await screen.findByRole('tab', { name: 'Argh CD' })).toHaveAttribute(

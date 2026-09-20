@@ -32,7 +32,7 @@ export function Browser() {
         className={styles.panel}
       >
         <Routes>
-          <Route path="/flack/*" element={<Flack />} />
+          <Route path="/flack/:channel?" element={<Flack />} />
           <Route path="/gitnub/*" element={<GitNub />} />
           <Route path="/argh-cd/*" element={<ArghCd />} />
           <Route path="/grafauxna/*" element={<Grafauxna />} />
