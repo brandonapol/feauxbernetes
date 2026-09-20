@@ -86,6 +86,18 @@ describe('chapters', () => {
     expect(playChapterRecoverably(config, 'ch8-alerts').state.story.phase).toBe('complete')
   })
 
+  it('bonus traffic spike golden path', () => {
+    const { state } = playChapter(config, 'bonus-traffic')
+    expect(state.story.phase).toBe('complete')
+    expect(state.gitops.deployRepo.wishes.web?.copies).toBe(6)
+  })
+
+  it('bonus database upgrade golden path', () => {
+    const { state } = playChapter(config, 'bonus-database')
+    expect(state.story.phase).toBe('complete')
+    expect(playChapterRecoverably(config, 'bonus-database').state.story.phase).toBe('complete')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)
