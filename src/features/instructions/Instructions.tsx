@@ -145,6 +145,7 @@ export function Instructions() {
               {step.options && (
                 <MultipleChoice stepId={step.id} options={step.options} interpolate={fill} />
               )}
+              {step.solution?.type === 'setPlayerName' && <NameField />}
               {showsElsewhere && (
                 <p className={styles.elsewhere}>
                   <span aria-hidden="true">👉 </span>Make this choice in the Ops Console.
@@ -265,5 +266,34 @@ export function Instructions() {
         )}
       </footer>
     </div>
+  )
+}
+
+/** The only free-text input besides log search: the learner's name, captured in Ch 0. */
+function NameField() {
+  const dispatch = useDispatch()
+  const [name, setName] = useState('')
+  return (
+    <form
+      className={styles.nameForm}
+      onSubmit={(event) => {
+        event.preventDefault()
+        const trimmed = name.trim()
+        if (!trimmed) return
+        dispatch({ type: 'setPlayerName', name: trimmed })
+      }}
+    >
+      <label className={styles.field}>
+        Your name
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="nickname"
+        />
+      </label>
+      <button type="submit" className={styles.primary} disabled={!name.trim()}>
+        That&rsquo;s me
+      </button>
+    </form>
   )
 }

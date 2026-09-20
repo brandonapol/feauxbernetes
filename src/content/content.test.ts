@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Chapter } from '../engine/story/types'
+import { CHAPTERS } from './chapters'
 import { CHANNELS, incidentChannel, incidentChannelId } from './channels'
 import { characters } from './characters'
 import { ALLOWED_DOCS_HOSTS, DOCS } from './docsLinks'
@@ -341,10 +342,8 @@ describe('style checks (issue #10) — proven against fixtures', () => {
   })
 })
 
-describe("today's content is clean (chapters don't exist yet, but this content does)", () => {
-  // Everything #10 actually ships: no chapters yet, so this is the real, non-fixture assertion —
-  // the same functions above will scan chapters too, the moment a chapter ticket adds one.
-  const todaysContent = [characters, GLOSSARY, SERVICES, DOCS, CHANNELS, MENTOR_FAQ]
+describe("today's content is clean", () => {
+  const todaysContent = [characters, GLOSSARY, SERVICES, DOCS, CHANNELS, MENTOR_FAQ, CHAPTERS]
 
   it('has no denylisted Kubernetes terms', () => {
     const violations = collectStrings(todaysContent).map(findDenylistedTerm).filter(Boolean)
