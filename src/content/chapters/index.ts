@@ -6,6 +6,7 @@ import { selfHealChapter } from './03-self-heal'
 import { gitopsChapter } from './04-gitops'
 import { ciChapter } from './05-ci'
 import { wrapChapter } from './06-wrap'
+import { seeingInsideChapter } from './07-seeing-inside'
 
 export const CHAPTERS: Chapter[] = [
   welcomeChapter,
@@ -15,4 +16,5 @@ export const CHAPTERS: Chapter[] = [
   gitopsChapter,
   ciChapter,
   wrapChapter,
+  seeingInsideChapter,
 ]

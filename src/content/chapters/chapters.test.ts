@@ -65,6 +65,12 @@ describe('chapters', () => {
     expect(playChapterRecoverably(config, '06-wrap').state.story.phase).toBe('complete')
   })
 
+  it('Ch 6 golden path', () => {
+    const { state } = playChapter(config, 'ch6-seeing-inside')
+    expect(state.story.phase).toBe('complete')
+    expect(state.ui.unlockedTabs).toContain('grafauxna')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)
