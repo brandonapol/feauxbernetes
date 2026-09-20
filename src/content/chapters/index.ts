@@ -4,6 +4,7 @@ import { boxesChapter } from './01-boxes'
 import { orderFormChapter } from './02-order-form'
 import { selfHealChapter } from './03-self-heal'
 import { gitopsChapter } from './04-gitops'
+import { ciChapter } from './05-ci'
 
 export const CHAPTERS: Chapter[] = [
   welcomeChapter,
@@ -11,4 +12,5 @@ export const CHAPTERS: Chapter[] = [
   orderFormChapter,
   selfHealChapter,
   gitopsChapter,
+  ciChapter,
 ]
