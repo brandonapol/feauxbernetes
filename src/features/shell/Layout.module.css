@@ -1,0 +1,33 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 24fr) minmax(480px, 52fr) minmax(280px, 24fr);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.instructions,
+.browser,
+.opsConsole {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.instructions {
+  background: var(--paper);
+  border-right: 1px solid var(--border);
+}
+
+.browser {
+  border-right: 1px solid var(--border-strong);
+}
+
+.opsConsole {
+  background: var(--paper);
+}
+
+@media (max-width: 1099px) {
+  .layout {
+    display: none;
+  }
+}

@@ -1,0 +1,13 @@
+.placeholder {
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.placeholder h2 {
+  margin-top: 0;
+  color: var(--text);
+}
+
+.issue {
+  font-size: 0.8125rem;
+}
