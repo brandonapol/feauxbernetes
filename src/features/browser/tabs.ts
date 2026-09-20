@@ -7,6 +7,12 @@ export interface TabInfo {
   path: string
   /** The plausible, read-only URL shown in the address bar while this tab is active. */
   address: string
+  /**
+   * For a tab whose address changes with its sub-route (inkwell.example's real pages live on
+   * different subdomains and paths, e.g. `status.inkwell.example`), overrides `address` given the
+   * current hash pathname. Falls back to `address` when absent or when this returns undefined.
+   */
+  addressForPath?: (pathname: string) => string | undefined
 }
 
 /**
@@ -36,7 +42,18 @@ export const TABS: TabInfo[] = [
     path: '/pagerdoody',
     address: 'pagerdoody.example/incidents',
   },
-  { id: 'inkwell', label: 'inkwell.example', path: '/inkwell', address: 'inkwell.example' },
+  {
+    id: 'inkwell',
+    label: 'inkwell.example',
+    path: '/inkwell',
+    address: 'inkwell.example',
+    addressForPath: (pathname) => {
+      if (pathname.startsWith('/inkwell/status')) return 'status.inkwell.example'
+      if (pathname === '/inkwell/signup') return 'inkwell.example/signup'
+      if (pathname === '/inkwell/pricing') return 'inkwell.example/pricing'
+      return undefined
+    },
+  },
 ]
 
 function firstSegment(pathname: string): string | undefined {
