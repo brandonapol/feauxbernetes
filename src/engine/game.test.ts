@@ -8,7 +8,10 @@ import {
 } from './cluster/__fixtures__/basicCluster'
 import { createCluster } from './cluster/cluster'
 import type { ClusterState } from './cluster/types'
+import { WEB_E2E_SUITE, SIGNUP_BUG_BEHAVIOUR } from './ci/__fixtures__/webE2eSuite'
+import { basicCluster as gitopsCluster, basicGitOps } from './gitops/__fixtures__/basicGitOps'
 import { toyConfig } from './story/__fixtures__/toyChapter'
+import { play } from './story/harness'
 import { blankState, initialState, reduce, type Action, type GameState } from './game'
 
 const config = toyConfig()
@@ -138,5 +141,131 @@ describe('determinism', () => {
     // A sanity check that the sequence actually did something, so this isn't vacuously true.
     expect(first.cluster.copies.length).toBeGreaterThan(0)
     expect(first.clusterEvents.length).toBeGreaterThan(0)
+  })
+})
+
+describe('reduce: GitNub / CI (#15)', () => {
+  const withSuites = { ...config, testSuites: { web: WEB_E2E_SUITE } }
+
+  function gitWorld(): GameState {
+    return {
+      ...initialState(withSuites).state,
+      cluster: gitopsCluster(),
+      gitops: basicGitOps(),
+    }
+  }
+
+  it('openPR on a wish change schedules a pipeline, auto-runs e2e, and records a CI notice', () => {
+    const { state, effects } = reduce(withSuites, gitWorld(), {
+      type: 'openPR',
+      repo: 'inkwell/deploy',
+      title: 'Bump search to v2',
+      change: { kind: 'wish', app: 'search', wish: { app: 'search', version: 'v2', copies: 3 } },
+      reviewers: ['kai'],
+    })
+    expect(state.gitops.pullRequests).toHaveLength(1)
+    const pr = state.gitops.pullRequests[0]
+    expect(pr.status).toBe('open')
+    expect(pr.pipelineId).toBeDefined()
+    expect(state.ciNotices.length).toBeGreaterThan(0)
+    expect(effects.some((effect) => effect.type === 'approvePR' && effect.reviewer === 'kai')).toBe(
+      true
+    )
+  })
+
+  it('merge is a no-op until the PR is approved, then mergePR lands the wish', () => {
+    let state = gitWorld()
+    state = reduce(withSuites, state, {
+      type: 'openPR',
+      repo: 'inkwell/deploy',
+      title: 'Bump search to v2',
+      change: { kind: 'wish', app: 'search', wish: { app: 'search', version: 'v2', copies: 3 } },
+    }).state
+    const prId = state.gitops.pullRequests[0].id
+    const blocked = reduce(withSuites, state, { type: 'mergePR', prId })
+    expect(blocked.state.gitops.pullRequests[0].status).not.toBe('merged')
+
+    state = reduce(withSuites, state, { type: 'approvePR', prId, reviewer: 'kai' }).state
+    state = reduce(withSuites, state, { type: 'mergePR', prId }).state
+    expect(state.gitops.pullRequests[0].status).toBe('merged')
+    expect(state.gitops.deployRepo.wishes.search?.version).toBe('v2')
+  })
+
+  it('a version PR with a failing flag stays checks-failed until the learner runs e2e and then Suggest a fix', () => {
+    let state = gitWorld()
+    state = reduce(withSuites, state, {
+      type: 'openPR',
+      repo: 'inkwell/web',
+      title: 'Stricter sign-up email check',
+      change: {
+        kind: 'version',
+        app: 'web',
+        version: {
+          version: '1.9',
+          author: 'alex',
+          summary: 'Reject bad emails',
+          behaviour: SIGNUP_BUG_BEHAVIOUR,
+        },
+      },
+    }).state
+    const pr = state.gitops.pullRequests[0]
+    expect(pr.status).toBe('checks-running')
+    const pipeline = state.ci.pipelines[pr.pipelineId!]
+    const e2e = pipeline.stages.find((stage) => stage.name === 'End-to-end tests')!.jobs[0]
+    state = reduce(withSuites, state, {
+      type: 'runJob',
+      pipelineId: pipeline.id,
+      jobId: e2e.id,
+    }).state
+    expect(state.gitops.pullRequests[0].status).toBe('checks-failed')
+    expect(state.ciNotices.some((notice) => /failed/i.test(notice.english))).toBe(true)
+
+    state = reduce(withSuites, state, {
+      type: 'suggestFix',
+      prId: pr.id,
+      fix: 'fix-code',
+    }).state
+    const next = state.gitops.pullRequests[0]
+    expect(next.change.kind === 'version' && next.change.version.behaviour).toEqual({})
+    expect(next.status).toBe('checks-running')
+  })
+
+  it('play() can open, approve and merge a wish PR end to end', () => {
+    const start = gitWorld()
+    const opened = reduce(withSuites, start, {
+      type: 'openPR',
+      repo: 'inkwell/deploy',
+      title: 'Bump search',
+      change: { kind: 'wish', app: 'search', wish: { app: 'search', version: 'v2', copies: 3 } },
+      reviewers: ['kai'],
+    })
+    const prId = opened.state.gitops.pullRequests[0].id
+    const state = play(withSuites, opened.state, [
+      { type: 'approvePR', prId, reviewer: 'kai' },
+      { type: 'mergePR', prId },
+    ])
+    expect(state.gitops.pullRequests[0].status).toBe('merged')
+  })
+})
+
+describe('reduce: Argh CD sync / rollback (#16)', () => {
+  function syncedWorld(): GameState {
+    return {
+      ...initialState(config).state,
+      cluster: gitopsCluster(),
+      gitops: basicGitOps(),
+    }
+  }
+
+  it('sync is a no-op when GitNub has no wish, and records a ManualSync when it does', () => {
+    const empty = initialState(config).state
+    const skipped = reduce(config, empty, { type: 'sync', app: 'search' })
+    expect(skipped.state.gitopsEvents).toEqual([])
+
+    const { state } = reduce(config, syncedWorld(), { type: 'sync', app: 'search' })
+    expect(state.gitopsEvents.some((event) => event.kind === 'ManualSync')).toBe(true)
+    expect(state.gitops.apps.search?.history.some((entry) => entry.trigger === 'manual-sync')).toBe(
+      true
+    )
   })
 })

@@ -1,4 +1,5 @@
 import type { Box, ClusterConfig, ClusterSpec, Database, Wish } from '../engine/cluster'
+import type { AppRepo, GitOpsSpec } from '../engine/gitops'
 
 /** Monday 14 September 2026, 09:00 UTC: the learner's first day. */
 export const WORLD_START = Date.UTC(2026, 8, 14, 9, 0, 0) / 1000
@@ -88,4 +89,40 @@ export const STARTING_CLUSTER_SPEC: ClusterSpec = {
   wishes: STARTING_WISHES,
   database: STARTING_DATABASE,
   config: CLUSTER_CONFIG,
+}
+
+export const GITOPS_CONFIG = { autoSyncDelayMs: 4000, selfHealDelayMs: 6000 }
+
+/** What's already shipped, oldest first — GitNub's app-repo version lists. */
+export const STARTING_APP_REPOS: AppRepo[] = [
+  {
+    app: 'web',
+    versions: [
+      {
+        version: '1.8',
+        author: 'alex',
+        summary: 'Editor polish for the public launch.',
+        behaviour: {},
+      },
+    ],
+  },
+  {
+    app: 'search',
+    versions: [
+      { version: '1.4', author: 'alex', summary: 'Faster document lookup.', behaviour: {} },
+    ],
+  },
+  {
+    app: 'billing',
+    versions: [
+      { version: '2.4.0', author: 'alex', summary: 'Checkout and subscriptions.', behaviour: {} },
+    ],
+  },
+]
+
+/** The deploy repo as the learner finds it on day one: the same wishes the cluster starts with. */
+export const STARTING_GITOPS_SPEC: GitOpsSpec = {
+  config: GITOPS_CONFIG,
+  wishes: STARTING_WISHES,
+  appRepos: STARTING_APP_REPOS,
 }

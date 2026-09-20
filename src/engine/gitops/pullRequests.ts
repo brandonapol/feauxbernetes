@@ -192,6 +192,20 @@ export function revertPR(
   return mergePR(approved, opened.pullRequest.id, now)
 }
 
+/**
+ * Replaces a still-open PR's change (Ch 5 / Ch 10 "Suggest a fix"): the learner picked a new
+ * version of the same change, so GitNub keeps the PR and CI starts over. A no-op on a merged PR.
+ */
+export function amendPRChange(
+  gitops: GitOpsState,
+  prId: string,
+  change: PullRequestChange
+): GitOpsState {
+  const pr = findPullRequest(gitops, prId)
+  if (!pr || pr.status === 'merged') return gitops
+  return updatePR(gitops, prId, { change })
+}
+
 function updatePR(gitops: GitOpsState, prId: string, patch: Partial<PullRequest>): GitOpsState {
   return {
     ...gitops,

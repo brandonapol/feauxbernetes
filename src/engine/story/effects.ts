@@ -1,5 +1,6 @@
 import type { GameEvent } from '../events'
 import type { GameState } from '../game'
+import { approvePR } from '../gitops'
 import { interpolate } from './template'
 import type { Effect, GameConfig } from './types'
 
@@ -152,5 +153,14 @@ export function applyEffect(config: GameConfig, state: GameState, effect: Effect
         from: ARGH_CD_BOT,
         text: effect.notice.text,
       })
+
+    case 'approvePR': {
+      const gitops = approvePR(state.gitops, effect.prId, effect.reviewer)
+      if (gitops === state.gitops) return { state, events: [] }
+      return {
+        state: { ...state, gitops },
+        events: [{ type: 'prApproved', prId: effect.prId, reviewer: effect.reviewer }],
+      }
+    }
   }
 }

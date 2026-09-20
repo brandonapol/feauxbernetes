@@ -1,3 +1,4 @@
+import type { TestSuite } from '../ci'
 import type { GitOpsNotice } from '../gitops/events'
 import type { GameEvent, Tab } from '../events'
 import type { Action, GameState } from '../game'
@@ -73,6 +74,13 @@ export type Effect = (
    * like `unlockTab`: no chapter ever needs to take it back.
    */
   | { type: 'unlockUnplugCopy' }
+  /**
+   * Delayed scripted review (GitNub #15): Kai (or whoever) approves a PR after a beat, so the
+   * learner watches the review land rather than clicking Approve themselves. A no-op if the PR
+   * isn't `'open'` yet (checks still running) — chapters that auto-approve should schedule this
+   * *after* checks pass, or the Action `approvePR` waits until they have.
+   */
+  | { type: 'approvePR'; prId: string; reviewer: string }
 ) & {
   /** Wait this long before applying. Only the store honours delays; tests apply at once. */
   delayMs?: number
@@ -283,4 +291,10 @@ export interface GameConfig {
   }
   /** Questions Ask Kai always offers, on top of the current chapter's `mentorQuestions`. */
   mentorGeneralQuestions?: string[]
+  /**
+   * End-to-end suites keyed by app id. GitNub (#15) looks these up when it opens a PR, so the CI
+   * engine never has to import content. Optional: a test fixture without suites still type-checks,
+   * and a PR for an app with no suite just runs an empty (always-green) e2e job.
+   */
+  testSuites?: Record<string, TestSuite>
 }

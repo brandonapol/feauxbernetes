@@ -1,0 +1,1085 @@
+.gitnub {
+  --gn-header: #232840;
+  --gn-green: #2b7a5b;
+  --gn-green-hover: #236b4f;
+  --gn-link: #3654c8;
+  --gn-subtle: #f6f7fa;
+
+  min-height: 100%;
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+.gitnub a {
+  color: var(--gn-link);
+  text-decoration: none;
+}
+
+.gitnub a:hover {
+  text-decoration: underline;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--gn-header);
+  color: white;
+}
+
+.gitnub .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* A fountain-pen nib: clearly not anyone's cat. */
+.logoMark {
+  width: 18px;
+  height: 22px;
+  background: #f7c948;
+  clip-path: polygon(50% 100%, 0 38%, 22% 0, 78% 0, 100% 38%);
+}
+
+.search {
+  flex: 1;
+  max-width: 260px;
+  padding: 3px 10px;
+  border: 1px solid #4a5170;
+  border-radius: 6px;
+  color: #aab1cc;
+  font-size: 0.75rem;
+}
+
+.search kbd {
+  padding: 0 4px;
+  border: 1px solid #4a5170;
+  border-radius: 3px;
+}
+
+.me {
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #7048e8;
+}
+
+.page {
+  padding: 16px 20px 32px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.badge,
+.badgeBranch {
+  display: inline-block;
+  padding: 0 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.badgeBranch {
+  font-family: var(--font-mono);
+  background: var(--gn-subtle);
+}
+
+/* ---- org */
+
+.orgHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.orgAvatar {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #1c7ed6;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.orgName {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.sectionTitle {
+  margin: 16px 0 8px;
+  font-size: 0.9375rem;
+}
+
+.repoList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repoCard {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.repoCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.repoMeta {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.langDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #495057;
+  vertical-align: -1px;
+}
+
+/* ---- repo */
+
+.repoTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.125rem;
+}
+
+.repoIcon {
+  color: var(--text-muted);
+}
+
+.slash {
+  color: var(--text-muted);
+}
+
+.gitnub .repoName {
+  font-weight: 700;
+}
+
+.repoTabs {
+  display: flex;
+  gap: 4px;
+  margin: 10px -20px 14px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gitnub .repoTabs a {
+  padding: 6px 10px 8px;
+  border-bottom: 2px solid transparent;
+  color: var(--text);
+}
+
+.gitnub .repoTabs a[aria-current='page'] {
+  border-bottom-color: #f76707;
+  font-weight: 600;
+}
+
+.archivedBanner {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #ffd43b;
+  border-radius: 6px;
+  background: #fff9db;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.branchPicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--gn-subtle);
+  font-family: var(--font-mono);
+}
+
+.branchPicker select {
+  border: none;
+  background: transparent;
+  font: inherit;
+}
+
+.crumbs {
+  font-size: 0.9375rem;
+}
+
+.codeWrapper {
+  position: relative;
+}
+
+.codeButton {
+  padding: 5px 12px;
+  border: 1px solid var(--gn-green-hover);
+  border-radius: 6px;
+  background: var(--gn-green);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.codeButton:hover {
+  background: var(--gn-green-hover);
+}
+
+.codePopover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 340px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+}
+
+.popoverTitle {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.popoverTab {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #f76707;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.urlRow {
+  display: flex;
+  gap: 6px;
+}
+
+.urlInput {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--gn-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.copyButton {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popoverHint {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.fileBox {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.latestCommit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--gn-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+.commitAuthor {
+  font-weight: 600;
+}
+
+.commitMessage {
+  color: var(--text-muted);
+}
+
+.commitId {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.gitnub .commitCount {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fileTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fileTable td {
+  padding: 7px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.fileTable tr:first-child td {
+  border-top: none;
+}
+
+.fileName {
+  white-space: nowrap;
+}
+
+.fileIcon {
+  margin-right: 6px;
+}
+
+.fileCommit {
+  color: var(--text-muted);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileTime {
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.readme {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.readmeTitle {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--gn-subtle);
+  font-size: 0.8125rem;
+}
+
+.readme > div,
+.preview {
+  padding: 16px 20px;
+}
+
+.fileToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 3px 10px;
+  border: none;
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--gn-subtle);
+  font-weight: 700;
+}
+
+.codeTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.lineNumber {
+  width: 1%;
+  padding: 0 12px;
+  color: var(--text-muted);
+  text-align: right;
+  user-select: none;
+  vertical-align: top;
+}
+
+.codeLine {
+  padding: 0 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- commits */
+
+.commitGroup {
+  margin-bottom: 16px;
+}
+
+.commitDay {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.commitList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.commitRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.commitRow:first-child {
+  border-top: none;
+}
+
+.commitMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.commitSubject {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.notFound {
+  padding: 2rem 0;
+}
+
+/* ---- pull requests */
+
+.tabCount {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--chrome-hover);
+  font-size: 0.6875rem;
+}
+
+.comparePrompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #99c2ff;
+  border-radius: 8px;
+  background: #e7f1ff;
+}
+
+.gitnub .compareButton {
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: var(--gn-green);
+  color: white;
+  font-weight: 600;
+}
+
+.gitnub .compareButton:hover {
+  background: var(--gn-green-hover);
+  text-decoration: none;
+}
+
+.prTitle {
+  margin: 14px 0 6px;
+  font-size: 1.375rem;
+  font-weight: 400;
+}
+
+.prNumber {
+  color: var(--text-muted);
+}
+
+.prMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.statusOpen,
+.statusMerged {
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.statusOpen {
+  background: var(--gn-green);
+}
+
+.statusMerged {
+  background: #7048e8;
+}
+
+.branchChip {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #e7f1ff;
+  color: #1a4bb5;
+  font-size: 0.8125rem;
+}
+
+.prTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.prTab {
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.prTab[aria-selected='true'] {
+  border-color: var(--border-strong);
+  background: var(--gn-subtle);
+  font-weight: 600;
+}
+
+.prBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prComment {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.prCommentHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--gn-subtle);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.prComment > :not(.prCommentHeader) {
+  padding: 12px;
+}
+
+.approved {
+  color: var(--gn-green);
+  font-weight: 600;
+}
+
+.prNotice {
+  padding: 12px;
+  border: 1px solid #ffd43b;
+  border-radius: 8px;
+  background: #fff9db;
+}
+
+.prNoticeTitle {
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.mergeBox {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.mergeSummary {
+  margin: 0 0 10px;
+}
+
+.mergeConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.mergePreview {
+  width: 100%;
+  margin: 0;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--gn-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.mergedLine {
+  margin: 0 0 10px;
+}
+
+.secondaryButton {
+  padding: 5px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.prForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 34rem;
+  margin-top: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.prForm .codeButton {
+  align-self: flex-start;
+}
+
+.diffHeader {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--gn-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.hunkHeader {
+  padding: 2px 12px;
+  background: #eef2ff;
+  color: #4c6ef5;
+  font-size: 0.75rem;
+}
+
+.added {
+  background: #e6ffed;
+}
+
+.removed {
+  background: #ffeef0;
+}
+
+.graph {
+  margin: 8px 0;
+}
+
+.graphLabel {
+  font-size: 11px;
+  fill: #868e96;
+}
+
+.backLink {
+  margin-top: 16px;
+  font-size: 0.8125rem;
+}
+
+.conflictFiles {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.8125rem;
+}
+
+.mergeBlocked {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-left: 3px solid #f0a35e;
+  background: #fff8f0;
+  font-size: 0.8125rem;
+}
+
+.conflictFile {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.conflictPath {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.conflictSides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sideLabel {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sideText {
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.choiceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.choiceRow [aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.preview {
+  margin-bottom: 10px;
+}
+
+.nudge {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-left: 3px solid #f0a35e;
+  background: #fff8f0;
+  font-size: 0.8125rem;
+}
+
+.markers {
+  margin-bottom: 12px;
+  font-size: 0.8125rem;
+}
+
+.markers summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+/* ---- wish editor (#15) */
+
+.wishForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.wishCard {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--gn-subtle);
+  font-weight: 600;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.yamlToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 0.8125rem;
+}
+
+.yamlList {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.yamlLine {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.yamlList li:last-child .yamlLine {
+  border-bottom: none;
+}
+
+.yamlLine:hover,
+.yamlLine:focus-visible {
+  background: var(--gn-subtle);
+}
+
+.yamlEnglish {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+}
+
+.titlePicker {
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.titlePicker .cardLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-weight: 400;
+}
+
+/* ---- checks */
+
+.checks {
+  margin: 16px 0;
+}
+
+.checkStage {
+  margin-bottom: 10px;
+}
+
+.checkStageName {
+  margin: 0 0 4px;
+  font-size: 0.8125rem;
+}
+
+.checkJobs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkJob {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.checkJobRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.runJob {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--gn-green-hover);
+  border-radius: 6px;
+  background: var(--gn-green);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report {
+  margin-top: 8px;
+}
+
+.reportPre {
+  margin: 8px 0 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 6px;
+  background: #161b22;
+  color: #e6edf3;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre;
+}
+
+.suggestFix {
+  margin: 16px 0;
+}
+
+.fixList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fixCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fixCard[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+
+.fixDiff {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--gn-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.fixDiff [data-tone='added'] {
+  color: var(--success);
+}
+
+.fixDiff [data-tone='removed'] {
+  color: var(--danger);
+}
+
+.kaiNote {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--chrome);
+  font-size: 0.8125rem;
+}
+
+.mergeBox .codeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
