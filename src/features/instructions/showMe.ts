@@ -36,6 +36,23 @@ export function targetIdFor(action: Action): string | undefined {
       return `copy:${action.copyId}`
     case 'setBox':
       return `box:${action.boxId}`
+    case 'openPR':
+      return 'propose-change'
+    case 'approvePR':
+      return `pr:${action.prId}:approve`
+    case 'mergePR':
+      return `pr:${action.prId}:merge`
+    case 'runJob':
+    case 'startJob':
+      return `job:${action.jobId}`
+    case 'revertPR':
+      return `pr:${action.prId}:revert`
+    case 'suggestFix':
+      return `pr:${action.prId}:fix:${action.fix}`
+    case 'sync':
+      return `sync:${action.app}`
+    case 'rollback':
+      return `rollback:${action.historyId}`
     default:
       return undefined
   }
@@ -68,6 +85,23 @@ export function describeSolution(action: Action): string {
       return 'Unplug the highlighted copy.'
     case 'setBox':
       return `Turn box ${action.boxId} ${action.on ? 'on' : 'off'}.`
+    case 'openPR':
+      return 'Propose this change.'
+    case 'approvePR':
+      return 'Approve the pull request.'
+    case 'mergePR':
+      return 'Merge the pull request.'
+    case 'runJob':
+    case 'startJob':
+      return 'Run the highlighted check.'
+    case 'revertPR':
+      return 'Revert the pull request.'
+    case 'suggestFix':
+      return 'Choose the highlighted fix.'
+    case 'sync':
+      return `Sync ${action.app}.`
+    case 'rollback':
+      return 'Roll back to the highlighted version.'
     case 'setPlayerName':
       return 'Type your name.'
     default:

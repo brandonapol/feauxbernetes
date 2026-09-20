@@ -20,6 +20,21 @@ describe('targetIdFor', () => {
       [{ type: 'chooseWish', app: 'search', version: '1.4', copies: 3 }, 'wish:search'],
       [{ type: 'unplugCopy', copyId: 'search-1' }, 'copy:search-1'],
       [{ type: 'setBox', boxId: 'box-b', on: false }, 'box:box-b'],
+      [
+        {
+          type: 'openPR',
+          repo: 'inkwell/deploy',
+          title: 'Bump web',
+          change: { kind: 'wish', app: 'web', wish: { app: 'web', version: '2.0', copies: 3 } },
+        },
+        'propose-change',
+      ],
+      [{ type: 'approvePR', prId: 'pr-1', reviewer: 'kai' }, 'pr:pr-1:approve'],
+      [{ type: 'mergePR', prId: 'pr-1' }, 'pr:pr-1:merge'],
+      [{ type: 'runJob', pipelineId: 'p1', jobId: 'p1-e2e' }, 'job:p1-e2e'],
+      [{ type: 'revertPR', prId: 'pr-1' }, 'pr:pr-1:revert'],
+      [{ type: 'sync', app: 'web' }, 'sync:web'],
+      [{ type: 'rollback', app: 'web', historyId: 'sync-1' }, 'rollback:sync-1'],
     ]
     for (const [action, expected] of cases) {
       expect(targetIdFor(action)).toBe(expected)

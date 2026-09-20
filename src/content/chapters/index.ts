@@ -1,6 +1,7 @@
 import { createCluster } from '../../engine/cluster'
+import { createGitOps } from '../../engine/gitops'
 import type { Chapter } from '../../engine/story/types'
-import { STARTING_CLUSTER_SPEC } from '../world'
+import { STARTING_CLUSTER_SPEC, STARTING_GITOPS_SPEC } from '../world'
 
 /**
  * No chapters exist yet — they start with #18 ("Welcome to the platform team"). This placeholder
@@ -18,6 +19,7 @@ export const CHAPTERS: Chapter[] = [
     setup: (state) => ({
       ...state,
       cluster: createCluster(STARTING_CLUSTER_SPEC),
+      gitops: createGitOps(STARTING_GITOPS_SPEC),
       ui: { ...state.ui, unlockedTabs: ['flack', 'inkwell', 'arghcd'] },
     }),
     steps: [

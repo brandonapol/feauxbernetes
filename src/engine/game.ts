@@ -7,14 +7,36 @@ import {
   type ClusterEvent,
   type ClusterState,
 } from './cluster'
-import { createCiState, type CiState } from './ci'
-import type { Tab } from './events'
 import {
+  createCiState,
+  pipelineForPR,
+  prCheckStatus,
+  runJob as runCiJob,
+  schedulePipeline,
+  skipTest as skipCiTest,
+  startJob as startCiJob,
+  type CiState,
+  type Pipeline,
+} from './ci'
+import type { GameEvent, Tab } from './events'
+import {
+  amendPRChange,
+  approvePR as approveGitOpsPR,
   createGitOps,
+  findPullRequest,
   GITOPS_EVENT_KINDS,
+  mergePR as mergeGitOpsPR,
+  openPR as openGitOpsPR,
+  revertPR as revertGitOpsPR,
+  rollback as rollbackGitOps,
+  setPRChecks,
+  sync as syncGitOps,
   tick as gitopsTick,
   type GitOpsEvent,
+  type GitOpsNotice,
   type GitOpsState,
+  type PullRequest,
+  type PullRequestChange,
 } from './gitops'
 import { applyEffect, openChannelState } from './story/effects'
 import { advanceStory, enterStep, skipStep } from './story/runner'
@@ -35,9 +57,8 @@ export const GAME_STATE_VERSION = 2
  * the store owns; `gitops` (#7) and `ci` (#8) followed in #11, so the "Where is my change?" strip
  * has real state to read (see `src/features/instructions/whereIsMyChange.ts`). `gitops` grew its
  * clock-driven tick in #53 (below), since Argh CD's auto-sync and self-heal timers run on it
- * whether or not a chapter has ever opened a pull request yet. `ci` still has no `reduce` case —
- * no chapter creates a pull request (and so no pipeline) until #15/#16 add the actions (`openPR`,
- * `mergePR`, `runJob`, `sync`, …) that do.
+ * whether or not a chapter has ever opened a pull request yet. `ci` grew its `reduce` cases in
+ * #15 (`openPR` schedules a pipeline; `runJob` advances it).
  */
 // TODO(#9): swap for the telemetry engine's real state (series, logs, SLOs, alert rules).
 type TelemetryState = Record<string, never>
@@ -53,10 +74,8 @@ type IncidentState = Record<string, never>
  * instead, and (unlike the cluster and gitops engines) none of its state transitions are
  * clock-driven: `schedulePipeline` resolves Build and Unit tests synchronously the moment a PR's
  * pipeline is scheduled, and the end-to-end job only ever moves because the learner clicks "Run"
- * (`runJob`), never because time passed (see #53's PR description). So `GameState.ciNotices` stays
- * a stub nobody populates until #15/#16 add the actions that schedule/run a pipeline in the first
- * place — whichever of those lands the first pipeline should push entries here, the same way
- * `tick` below pushes `clusterEvents`/`gitopsEvents`.
+ * (`runJob`), never because time passed (see #53's PR description). GitNub's actions (#15) push
+ * entries here as jobs run, the same way `tick` below pushes `clusterEvents`/`gitopsEvents`.
  */
 export interface CiNotice {
   at: number
@@ -233,6 +252,29 @@ export type Action =
       state: StatusComponentState
       message: string
     }
+  /** GitNub (#15): open a PR against a repo. Schedules a CI pipeline and, for a wish change,
+   * auto-runs the end-to-end job so Ch 4 doesn't need the ▶ click. */
+  | {
+      type: 'openPR'
+      repo: string
+      title: string
+      change: PullRequestChange
+      reviewers?: string[]
+      author?: string
+    }
+  | { type: 'approvePR'; prId: string; reviewer: string }
+  | { type: 'mergePR'; prId: string }
+  | { type: 'runJob'; pipelineId: string; jobId: string }
+  | { type: 'startJob'; pipelineId: string; jobId: string }
+  | { type: 'revertPR'; prId: string }
+  /** Ch 5 / Ch 10: pick a suggested fix on a failing PR. `skip-test` marks a test skipped;
+   * `fix-code` clears the version's behaviour flags and reschedules checks. */
+  | { type: 'suggestFix'; prId: string; fix: 'skip-test' | 'fix-code'; testName?: string }
+  /** Argh CD (#16): apply GitNub's wish now, instead of waiting for auto-sync. */
+  | { type: 'sync'; app: string }
+  /** Argh CD (#16): re-apply a history entry to the cluster. GitNub is unchanged, so auto-sync
+   * will bounce it back — see `rollback` in `engine/gitops/sync.ts`. */
+  | { type: 'rollback'; app: string; historyId: string }
 
 export interface ReduceResult {
   state: GameState
@@ -515,10 +557,10 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
     }
 
     case 'unplugCopy': {
-      const cluster = unplugClusterCopy(state.cluster, action.copyId)
-      return advanceStory(config, { ...state, cluster }, [
-        { type: 'copyUnplugged', copyId: action.copyId },
-      ])
+      const copyId = resolveCopyId(state, action.copyId)
+      if (!copyId) return { state: previous, effects: [] }
+      const cluster = unplugClusterCopy(state.cluster, copyId)
+      return advanceStory(config, { ...state, cluster }, [{ type: 'copyUnplugged', copyId }])
     }
 
     case 'setBox': {
@@ -548,5 +590,279 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
         { type: 'statusUpdatePosted', update },
       ])
     }
+
+    case 'openPR':
+      return openPullRequest(config, state, action)
+
+    case 'approvePR': {
+      const gitops = approveGitOpsPR(state.gitops, action.prId, action.reviewer)
+      return advanceStory(config, { ...state, gitops }, [
+        { type: 'prApproved', prId: action.prId, reviewer: action.reviewer },
+      ])
+    }
+
+    case 'mergePR': {
+      try {
+        const { gitops, pullRequest } = mergeGitOpsPR(state.gitops, action.prId, state.clock.now)
+        return advanceStory(config, { ...state, gitops }, [
+          { type: 'prMerged', prId: pullRequest.id },
+        ])
+      } catch {
+        return { state: previous, effects: [] }
+      }
+    }
+
+    case 'startJob': {
+      const ci = startCiJob(state.ci, action.pipelineId, action.jobId)
+      const next = pushCiNotice(
+        { ...state, ci },
+        `Job ${action.jobId} running`,
+        'End-to-end tests are running.'
+      )
+      return advanceStory(config, next, [
+        { type: 'jobStarted', pipelineId: action.pipelineId, jobId: action.jobId },
+      ])
+    }
+
+    case 'runJob':
+      return runPipelineJob(config, state, action.pipelineId, action.jobId)
+
+    case 'revertPR': {
+      try {
+        const { gitops, pullRequest } = revertGitOpsPR(state.gitops, action.prId, state.clock.now)
+        return advanceStory(config, { ...state, gitops }, [
+          { type: 'prReverted', prId: action.prId, revertPrId: pullRequest.id },
+        ])
+      } catch {
+        return { state: previous, effects: [] }
+      }
+    }
+
+    case 'suggestFix':
+      return suggestFix(config, state, action)
+
+    case 'sync':
+      return applyArghAction(
+        config,
+        state,
+        () => syncGitOps(state.gitops, state.cluster, action.app, state.clock.now),
+        { type: 'appSynced', app: action.app }
+      )
+
+    case 'rollback':
+      return applyArghAction(
+        config,
+        state,
+        () =>
+          rollbackGitOps(
+            state.gitops,
+            state.cluster,
+            action.app,
+            action.historyId,
+            state.clock.now
+          ),
+        { type: 'appRolledBack', app: action.app, historyId: action.historyId }
+      )
+  }
+}
+
+const BUILD_MS = 800
+const UNIT_MS = 1200
+const AUTO_APPROVE_DELAY_MS = 4000
+
+/** Chapters can't know a copy's generated id. `any:search` means "the first running copy of search". */
+function resolveCopyId(state: GameState, copyId: string): string | undefined {
+  if (!copyId.startsWith('any:')) return copyId
+  const app = copyId.slice(4)
+  return state.cluster.copies.find((copy) => copy.app === app && copy.state === 'Running')?.id
+}
+
+function pushCiNotice(state: GameState, raw: string, english: string): GameState {
+  return {
+    ...state,
+    ciNotices: [...state.ciNotices, { at: state.clock.now, raw, english }],
+  }
+}
+
+function e2eJob(pipeline: Pipeline) {
+  return pipeline.stages.find((stage) => stage.name === 'End-to-end tests')?.jobs[0]
+}
+
+function behaviourFor(state: GameState, app: string, version: string): Record<string, unknown> {
+  return state.cluster.config.versionBehaviour[`${app}@${version}`] ?? {}
+}
+
+function versionOf(change: PullRequestChange): string {
+  return change.kind === 'wish' ? change.wish.version : change.version.version
+}
+
+function attachPipeline(
+  config: GameConfig,
+  state: GameState,
+  pr: PullRequest,
+  autoRunE2e: boolean
+): { state: GameState; pipeline: Pipeline } {
+  const app = pr.change.app
+  const version = versionOf(pr.change)
+  const behaviour =
+    pr.change.kind === 'version' ? pr.change.version.behaviour : behaviourFor(state, app, version)
+  const scheduled = schedulePipeline(
+    state.ci,
+    {
+      prId: pr.id,
+      service: app,
+      suite: config.testSuites?.[app] ?? [],
+      behaviour,
+      buildDurationMs: BUILD_MS,
+      unitTestDurationMs: UNIT_MS,
+    },
+    state.clock.now
+  )
+  let ci = scheduled.ci
+  let pipeline = scheduled.pipeline
+  if (autoRunE2e) {
+    const job = e2eJob(pipeline)
+    if (job) {
+      ci = runCiJob(ci, pipeline.id, job.id)
+      pipeline = ci.pipelines[pipeline.id]!
+    }
+  }
+  const gitops = setPRChecks(state.gitops, pr.id, prCheckStatus(pipeline), pipeline.id)
+  const withNotice = pushCiNotice(
+    { ...state, ci, gitops },
+    `Pipeline ${pipeline.id} scheduled for ${pr.id}`,
+    `Checks started for ${pr.title}.`
+  )
+  return { state: withNotice, pipeline }
+}
+
+function delayedApprovals(pr: PullRequest): Effect[] {
+  return (pr.reviewers ?? []).map((reviewer) => ({
+    type: 'approvePR' as const,
+    prId: pr.id,
+    reviewer,
+    delayMs: AUTO_APPROVE_DELAY_MS,
+  }))
+}
+
+function openPullRequest(
+  config: GameConfig,
+  state: GameState,
+  action: Extract<Action, { type: 'openPR' }>
+): ReduceResult {
+  const opened = openGitOpsPR(
+    state.gitops,
+    {
+      repo: action.repo,
+      title: action.title,
+      author: action.author ?? 'player',
+      change: action.change,
+      reviewers: action.reviewers,
+    },
+    state.clock.now
+  )
+  const autoRunE2e = action.change.kind === 'wish'
+  const attached = attachPipeline(
+    config,
+    { ...state, gitops: opened.gitops },
+    opened.pullRequest,
+    autoRunE2e
+  )
+  const pr = findPullRequest(attached.state.gitops, opened.pullRequest.id)!
+  const pipeline = attached.pipeline
+  const effects = prCheckStatus(pipeline) === 'open' ? delayedApprovals(pr) : []
+  return advanceStory(config, attached.state, [{ type: 'prOpened', prId: pr.id }], effects)
+}
+
+function runPipelineJob(
+  config: GameConfig,
+  state: GameState,
+  pipelineId: string,
+  jobId: string
+): ReduceResult {
+  const ci = runCiJob(state.ci, pipelineId, jobId)
+  const pipeline = ci.pipelines[pipelineId]
+  if (!pipeline) return { state, effects: [] }
+  const gitops = pipeline.prId
+    ? setPRChecks(state.gitops, pipeline.prId, prCheckStatus(pipeline), pipeline.id)
+    : state.gitops
+  const job = pipeline.stages
+    .flatMap((stage) => stage.jobs)
+    .find((candidate) => candidate.id === jobId)
+  const english =
+    job?.status === 'failed'
+      ? 'End-to-end tests failed. This change cannot be merged yet.'
+      : job?.status === 'skipped'
+        ? 'End-to-end tests finished with a skipped check.'
+        : 'End-to-end tests passed.'
+  const next = pushCiNotice(
+    { ...state, ci, gitops },
+    `Job ${jobId} ${job?.status ?? 'ran'}`,
+    english
+  )
+  const pr = pipeline.prId ? findPullRequest(gitops, pipeline.prId) : undefined
+  const effects =
+    pr && prCheckStatus(pipeline) === 'open' && pr.status === 'open' ? delayedApprovals(pr) : []
+  return advanceStory(config, next, [{ type: 'jobRan', pipelineId, jobId }], effects)
+}
+
+function suggestFix(
+  config: GameConfig,
+  state: GameState,
+  action: Extract<Action, { type: 'suggestFix' }>
+): ReduceResult {
+  const pr = findPullRequest(state.gitops, action.prId)
+  if (!pr) return { state, effects: [] }
+  const pipeline = pipelineForPR(state.ci, pr.id)
+
+  if (action.fix === 'skip-test') {
+    if (!pipeline || !action.testName) return { state, effects: [] }
+    const ci = skipCiTest(state.ci, pipeline.id, action.testName)
+    return advanceStory(config, { ...state, ci }, [
+      { type: 'fixSuggested', prId: pr.id, fix: 'skip-test' },
+    ])
+  }
+
+  // fix-code: drop the behaviour flags that made the tests fail, keep the same version, and
+  // start checks over so the learner re-runs e2e against the fix.
+  if (pr.change.kind !== 'version') return { state, effects: [] }
+  const gitops = amendPRChange(state.gitops, pr.id, {
+    ...pr.change,
+    version: { ...pr.change.version, behaviour: {} },
+  })
+  const amended = findPullRequest(gitops, pr.id)!
+  const attached = attachPipeline(config, { ...state, gitops }, amended, false)
+  return advanceStory(config, attached.state, [
+    { type: 'fixSuggested', prId: pr.id, fix: 'fix-code' },
+  ])
+}
+
+function applyArghAction(
+  config: GameConfig,
+  state: GameState,
+  run: () => {
+    gitops: GitOpsState
+    cluster: ClusterState
+    events: GitOpsEvent[]
+    notices: GitOpsNotice[]
+  },
+  event: Extract<GameEvent, { type: 'appSynced' | 'appRolledBack' }>
+): ReduceResult {
+  try {
+    const result = run()
+    const next: GameState = {
+      ...state,
+      gitops: result.gitops,
+      cluster: result.cluster,
+      gitopsEvents: [...state.gitopsEvents, ...result.events],
+    }
+    return advanceStory(
+      config,
+      next,
+      [event],
+      result.notices.map((notice) => ({ type: 'gitOpsNotice' as const, notice }))
+    )
+  } catch {
+    return { state, effects: [] }
   }
 }

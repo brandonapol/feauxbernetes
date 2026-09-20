@@ -3,6 +3,7 @@ import { CHANNELS, DEFAULT_CHANNEL, MENTOR_CHANNEL } from './channels'
 import { CHAPTERS } from './chapters'
 import { characters } from './characters'
 import { GENERAL_QUESTIONS, MENTOR_FAQ } from './mentorFaq'
+import { TEST_SUITES } from './testSuites'
 import { WORLD_START } from './world'
 
 /**
@@ -19,5 +20,6 @@ export function createGameConfig(): GameConfig {
     startTime: WORLD_START,
     mentor: { characterId: 'kai', channel: MENTOR_CHANNEL, entries: MENTOR_FAQ },
     mentorGeneralQuestions: GENERAL_QUESTIONS,
+    testSuites: TEST_SUITES,
   }
 }

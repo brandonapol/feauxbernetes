@@ -48,3 +48,16 @@ export type GameEvent =
   | { type: 'gitOpsEvent'; event: GitOpsEvent }
   /** A status.inkwell.example update was posted (see `postStatusUpdate`, #17 and #31). */
   | { type: 'statusUpdatePosted'; update: StatusUpdate }
+  /** GitNub (#15): a pull request was opened, approved, merged, or reverted. */
+  | { type: 'prOpened'; prId: string }
+  | { type: 'prApproved'; prId: string; reviewer: string }
+  | { type: 'prMerged'; prId: string }
+  | { type: 'prReverted'; prId: string; revertPrId: string }
+  /** GitNub (#15): a CI job started or finished. */
+  | { type: 'jobStarted'; pipelineId: string; jobId: string }
+  | { type: 'jobRan'; pipelineId: string; jobId: string }
+  /** GitNub (#15): the learner picked a suggested fix on a failing PR. */
+  | { type: 'fixSuggested'; prId: string; fix: 'skip-test' | 'fix-code' }
+  /** Argh CD (#16): a manual sync or a history rollback. */
+  | { type: 'appSynced'; app: string }
+  | { type: 'appRolledBack'; app: string; historyId: string }
