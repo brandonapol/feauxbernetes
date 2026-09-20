@@ -5,6 +5,7 @@ import { Alerts } from './Alerts'
 import { Dashboard } from './Dashboard'
 import styles from './Grafauxna.module.css'
 import { Logs } from './Logs'
+import { Replay } from './Replay'
 import { SloPanel } from './SloPanel'
 
 /**
@@ -42,6 +43,14 @@ export function Grafauxna() {
           >
             Alerts
           </Link>
+          <Link
+            to="/grafauxna/replay"
+            aria-current={pathname.startsWith('/grafauxna/replay') ? 'page' : undefined}
+            data-target="grafauxna-replay"
+            onClick={() => dispatch({ type: 'clickTarget', targetId: 'grafauxna-replay' })}
+          >
+            Replay
+          </Link>
         </nav>
       </header>
       <div className={styles.content}>
@@ -50,6 +59,7 @@ export function Grafauxna() {
           <Route path="logs" element={<Logs />} />
           <Route path="slos" element={<SloPanel />} />
           <Route path="alerts" element={<Alerts />} />
+          <Route path="replay" element={<Replay />} />
           <Route path="*" element={<Navigate to="/grafauxna" replace />} />
         </Routes>
       </div>

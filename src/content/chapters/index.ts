@@ -8,6 +8,7 @@ import { ciChapter } from './05-ci'
 import { wrapChapter } from './06-wrap'
 import { seeingInsideChapter } from './07-seeing-inside'
 import { sloChapter } from './ch7-slo'
+import { alertsChapter } from './ch8-alerts'
 
 export const CHAPTERS: Chapter[] = [
   welcomeChapter,
@@ -19,4 +20,5 @@ export const CHAPTERS: Chapter[] = [
   wrapChapter,
   seeingInsideChapter,
   sloChapter,
+  alertsChapter,
 ]
