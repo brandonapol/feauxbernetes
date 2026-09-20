@@ -3,9 +3,16 @@ import type { Effect } from '../engine/story/types'
 
 export const STORAGE_KEY = 'feauxbernetes:v1'
 
-/** How many Flack messages and cluster events a save keeps. Older ones are dropped, oldest first. */
+/** How many Flack messages and cluster/gitops events (and CI notices) a save keeps. Older ones are
+ * dropped, oldest first — see `capForSave`. */
 export const MAX_SAVED_MESSAGES = 500
 export const MAX_SAVED_CLUSTER_EVENTS = 200
+/** Mirrors `MAX_SAVED_CLUSTER_EVENTS` for `gitopsEvents` (#53): same kind of scrollback feed, same
+ * cap, so a long session doesn't grow either one unbounded. */
+export const MAX_SAVED_GITOPS_EVENTS = 200
+/** Mirrors `MAX_SAVED_CLUSTER_EVENTS` for `ciNotices` (#53). Empty until #15/#16 start pushing to
+ * it, but capped from the start so it doesn't need revisiting once they do. */
+export const MAX_SAVED_CI_NOTICES = 200
 
 export interface ScheduledEffect {
   id: string
@@ -73,8 +80,23 @@ function capForSave(game: GameState): GameState {
     game.clusterEvents.length <= MAX_SAVED_CLUSTER_EVENTS
       ? game.clusterEvents
       : game.clusterEvents.slice(-MAX_SAVED_CLUSTER_EVENTS)
-  if (messages === game.flack.messages && clusterEvents === game.clusterEvents) return game
-  return { ...game, flack: { ...game.flack, messages }, clusterEvents }
+  const gitopsEvents =
+    game.gitopsEvents.length <= MAX_SAVED_GITOPS_EVENTS
+      ? game.gitopsEvents
+      : game.gitopsEvents.slice(-MAX_SAVED_GITOPS_EVENTS)
+  const ciNotices =
+    game.ciNotices.length <= MAX_SAVED_CI_NOTICES
+      ? game.ciNotices
+      : game.ciNotices.slice(-MAX_SAVED_CI_NOTICES)
+  if (
+    messages === game.flack.messages &&
+    clusterEvents === game.clusterEvents &&
+    gitopsEvents === game.gitopsEvents &&
+    ciNotices === game.ciNotices
+  ) {
+    return game
+  }
+  return { ...game, flack: { ...game.flack, messages }, clusterEvents, gitopsEvents, ciNotices }
 }
 
 /** Returns false if the write failed (quota, privacy mode); the game carries on either way. */

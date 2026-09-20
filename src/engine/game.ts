@@ -1,7 +1,6 @@
 import {
   crashCopy as crashClusterCopy,
   createCluster,
-  reconcile,
   setBox as setClusterBox,
   setWish as setClusterWish,
   unplugCopy as unplugClusterCopy,
@@ -10,7 +9,13 @@ import {
 } from './cluster'
 import { createCiState, type CiState } from './ci'
 import type { Tab } from './events'
-import { createGitOps, type GitOpsEvent, type GitOpsState } from './gitops'
+import {
+  createGitOps,
+  GITOPS_EVENT_KINDS,
+  tick as gitopsTick,
+  type GitOpsEvent,
+  type GitOpsState,
+} from './gitops'
 import { applyEffect, openChannelState } from './story/effects'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { BotCard, Channel, Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
@@ -28,9 +33,11 @@ export const GAME_STATE_VERSION = 2
  * `import type { XState as X } from './x'`, and give `blankState` its real initial value.
  * `cluster` (#6) was the first to be wired in, in #4, since the reconcile loop runs on the clock
  * the store owns; `gitops` (#7) and `ci` (#8) followed in #11, so the "Where is my change?" strip
- * has real state to read (see `src/features/instructions/whereIsMyChange.ts`). Neither grows a
- * `reduce` case or a clock-driven tick yet — no chapter creates a pull request until #15/#16 add
- * the actions (`openPR`, `mergePR`, `runJob`, `sync`, …) that do.
+ * has real state to read (see `src/features/instructions/whereIsMyChange.ts`). `gitops` grew its
+ * clock-driven tick in #53 (below), since Argh CD's auto-sync and self-heal timers run on it
+ * whether or not a chapter has ever opened a pull request yet. `ci` still has no `reduce` case —
+ * no chapter creates a pull request (and so no pipeline) until #15/#16 add the actions (`openPR`,
+ * `mergePR`, `runJob`, `sync`, …) that do.
  */
 // TODO(#9): swap for the telemetry engine's real state (series, logs, SLOs, alert rules).
 type TelemetryState = Record<string, never>
@@ -43,9 +50,13 @@ type IncidentState = Record<string, never>
  * A plain-English one-liner for the Ops Console's "Checks" feed category (#13), matching the
  * `{ raw, english }` shape `engine/cluster/events.ts` and `engine/gitops/events.ts` already use.
  * The CI engine (#8) doesn't produce an event stream yet — it renders a whole report on demand
- * instead — so `GameState.ciNotices` is a stub nobody populates yet. Whichever future ticket wires
- * CI into the game loop (a pipeline finishing, checks passing/failing on a PR) should push entries
- * here, the same way `tick` below pushes `clusterEvents`.
+ * instead, and (unlike the cluster and gitops engines) none of its state transitions are
+ * clock-driven: `schedulePipeline` resolves Build and Unit tests synchronously the moment a PR's
+ * pipeline is scheduled, and the end-to-end job only ever moves because the learner clicks "Run"
+ * (`runJob`), never because time passed (see #53's PR description). So `GameState.ciNotices` stays
+ * a stub nobody populates until #15/#16 add the actions that schedule/run a pipeline in the first
+ * place — whichever of those lands the first pipeline should push entries here, the same way
+ * `tick` below pushes `clusterEvents`/`gitopsEvents`.
  */
 export interface CiNotice {
   at: number
@@ -149,8 +160,8 @@ export interface GameState {
   cluster: ClusterState
   /** Cluster events from `reconcile`, oldest first, for the Ops Console (#13) feed. */
   clusterEvents: ClusterEvent[]
-  /** GitOps events for the Ops Console's "Deploys" feed category (#13). See `CiNotice` above for
-   * why this is empty until GitOps is wired into `tick` (#14/#16). */
+  /** GitOps events for the Ops Console's "Deploys" feed category (#13): auto-sync and self-heal,
+   * pushed by `tick` (#53). */
   gitopsEvents: GitOpsEvent[]
   /** CI notices for the Ops Console's "Checks" feed category (#13). See `CiNotice` above. */
   ciNotices: CiNotice[]
@@ -197,8 +208,9 @@ export type Action =
   /** An optional step the learner chose not to do. */
   | { type: 'skipStep' }
   /**
-   * Advances the fake clock by `deltaMs` and runs one cluster `reconcile` pass. Dispatched by the
-   * store on a real interval (see `store/gameStore.ts`); never dispatched by the UI directly.
+   * Advances the fake clock by `deltaMs` and runs the gitops engine's `tick` (cluster `reconcile`,
+   * plus Argh CD's auto-sync/self-heal timers, #53). Dispatched by the store on a real interval
+   * (see `store/gameStore.ts`); never dispatched by the UI directly.
    */
   | { type: 'tick'; deltaMs: number }
   /** The Ops Console "Make it so": ask the cluster to run `copies` of `app`@`version`. */
@@ -325,26 +337,47 @@ export function startChapter(config: GameConfig, from: GameState, chapterId: str
 }
 
 /**
+ * `gitops`'s `tick` (`engine/gitops/sync.ts`) mixes the cluster's own reconcile events into its one
+ * combined `events` array, so Argh CD's feed and the cluster's read as one stream. `GameState`
+ * keeps them in separate arrays for the Ops Console's feed categories (#13), so this splits that
+ * array back apart by checking each event's `kind` against gitops's own list of kinds.
+ */
+function isGitOpsEvent(event: ClusterEvent | GitOpsEvent): event is GitOpsEvent {
+  return (GITOPS_EVENT_KINDS as readonly string[]).includes(event.kind)
+}
+
+/**
  * The one clock to rule them all: advances `clock.now` by `deltaMs` (real time, scaled by the
  * store for `?fast=1`, and not advanced at all while the store is paused — see
- * `store/gameStore.ts`) and runs one cluster `reconcile` pass at the new time. Every other engine
- * that grows its own clock-driven loop (gitops' sync poll, telemetry's alert evaluation, …) will
- * get its pass added here too.
+ * `store/gameStore.ts`) and runs the gitops engine's `tick` at the new time, which runs the
+ * cluster's own `reconcile` pass *and* Argh CD's auto-sync/self-heal timers (#53; see planning.md →
+ * "GitOps" and "One clock to rule them all"). Every `GitOpsNotice` it returns is raised as a
+ * `gitOpsNotice` effect, which `story/effects.ts` (#12) turns into a `#deploys` Flack message from
+ * the Argh CD bot. Every other engine that grows its own clock-driven loop (telemetry's alert
+ * evaluation, …) will get its pass added here too.
  */
 function tick(config: GameConfig, previous: GameState, deltaMs: number): ReduceResult {
   const now = previous.clock.now + deltaMs
-  const { cluster, events } = reconcile(previous.cluster, now)
+  const { gitops, cluster, events, notices } = gitopsTick(previous.gitops, previous.cluster, now)
+  const clusterEvents = events.filter((event): event is ClusterEvent => !isGitOpsEvent(event))
+  const gitopsEvents = events.filter(isGitOpsEvent)
   const state: GameState = {
     ...previous,
     clock: { now },
     cluster,
-    // Kept in full while playing (it's a scrollback feed); the store trims it for storage.
-    clusterEvents: [...previous.clusterEvents, ...events],
+    gitops,
+    // Kept in full while playing (they're scrollback feeds); the store trims them for storage.
+    clusterEvents: [...previous.clusterEvents, ...clusterEvents],
+    gitopsEvents: [...previous.gitopsEvents, ...gitopsEvents],
   }
   return advanceStory(
     config,
     state,
-    events.map((event) => ({ type: 'clusterEvent', event }))
+    [
+      ...clusterEvents.map((event) => ({ type: 'clusterEvent' as const, event })),
+      ...gitopsEvents.map((event) => ({ type: 'gitOpsEvent' as const, event })),
+    ],
+    notices.map((notice) => ({ type: 'gitOpsNotice' as const, notice }))
   )
 }
 

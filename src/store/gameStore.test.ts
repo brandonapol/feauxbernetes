@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { setWish as setClusterWish } from '../engine/cluster'
+import { approvePR, createGitOps, mergePR, openPR, DEPLOY_REPO } from '../engine/gitops'
 import { T0, toyConfig } from '../engine/story/__fixtures__/toyChapter'
 import {
   createGameStore,
@@ -262,6 +264,94 @@ describe('game store', () => {
     const store = createGameStore({ config, storage, timers, search: '?chapter=epilogue&debug=1' })
     expect(store.getState().game.story.chapterId).toBe('epilogue')
     expect(store.getState().debug).toBe(true)
+  })
+})
+
+describe('the GitOps tick, wired into the live store (#53)', () => {
+  it('a merged PR auto-syncs after the delay, landing in gitopsEvents and #deploys', () => {
+    const store = createGameStore({ config, storage: memoryStorage(), timers })
+    const before = store.getState().game.clock.now
+
+    // Simulate GitNub's "Merge" button: #15/#16 haven't landed the action that does this from a
+    // dispatch yet, so the test drives the gitops engine directly, the way `whereIsMyChange.test.ts`
+    // does, then hands the result to the store as if a `mergePR` action had just run.
+    const gitops = store.getState().game.gitops
+    const opened = openPR(
+      gitops,
+      {
+        repo: DEPLOY_REPO,
+        title: 'Run 3 copies of search@v2',
+        author: 'Ada Lovelace',
+        change: { kind: 'wish', app: 'search', wish: { app: 'search', version: 'v2', copies: 3 } },
+      },
+      before
+    )
+    const approved = approvePR(opened.gitops, opened.pullRequest.id, 'Kai')
+    const merged = mergePR(approved, opened.pullRequest.id, before)
+    store.setState((s) => ({ game: { ...s.game, gitops: merged.gitops } }))
+
+    expect(store.getState().game.gitopsEvents).toEqual([])
+    expect(store.getState().game.flack.messages.some((m) => m.channel === 'deploys')).toBe(false)
+
+    // autoSyncDelayMs is 4000 for a brand-new game's gitops (see `blankGitOps` in `engine/game.ts`).
+    vi.advanceTimersByTime(4000 + TICK_INTERVAL_MS)
+
+    const autoSync = store.getState().game.gitopsEvents.find((e) => e.kind === 'AutoSync')
+    expect(autoSync).toBeDefined()
+    expect(autoSync?.appId).toBe('search')
+    expect(store.getState().game.cluster.wishes.search).toEqual({
+      app: 'search',
+      version: 'v2',
+      copies: 3,
+    })
+
+    const deployMessage = store.getState().game.flack.messages.find((m) => m.channel === 'deploys')
+    expect(deployMessage?.from).toBe('arghcd')
+    expect(deployMessage?.text).toContain('search')
+  })
+
+  it('drift the learner causes by hand self-heals on the clock', () => {
+    const store = createGameStore({ config, storage: memoryStorage(), timers })
+    const before = store.getState().game.clock.now
+
+    // GitNub and the cluster already agree on search@v1 x3 before the drift.
+    const gitops = createGitOps({
+      config: { autoSyncDelayMs: 4000, selfHealDelayMs: 6000 },
+      wishes: [{ app: 'search', version: 'v1', copies: 3 }],
+    })
+    const cluster = setClusterWish(
+      store.getState().game.cluster,
+      { app: 'search', version: 'v1', copies: 3 },
+      before
+    )
+    store.setState((s) => ({ game: { ...s.game, gitops, cluster } }))
+
+    // The learner changes it by hand in the Ops Console, bypassing GitNub entirely.
+    store.getState().dispatch({ type: 'chooseWish', app: 'search', version: 'v1', copies: 5 })
+    expect(store.getState().game.cluster.wishes.search).toEqual({
+      app: 'search',
+      version: 'v1',
+      copies: 5,
+    })
+
+    // One tick notices the drift and schedules self-heal; it doesn't revert it immediately.
+    vi.advanceTimersByTime(TICK_INTERVAL_MS)
+    expect(store.getState().game.gitopsEvents).toEqual([])
+    expect(store.getState().game.cluster.wishes.search?.copies).toBe(5)
+
+    // selfHealDelayMs is 6000 from the point the drift was first noticed.
+    vi.advanceTimersByTime(6000 + TICK_INTERVAL_MS)
+
+    const selfHeal = store.getState().game.gitopsEvents.find((e) => e.kind === 'SelfHeal')
+    expect(selfHeal).toBeDefined()
+    expect(store.getState().game.cluster.wishes.search).toEqual({
+      app: 'search',
+      version: 'v1',
+      copies: 3,
+    })
+    const deployMessage = store.getState().game.flack.messages.find((m) => m.channel === 'deploys')
+    expect(deployMessage?.from).toBe('arghcd')
+    expect(deployMessage?.text.toLowerCase()).toContain('drift')
   })
 })
 

@@ -1,4 +1,5 @@
 import type { ClusterEvent } from './cluster'
+import type { GitOpsEvent } from './gitops'
 import type { StatusUpdate } from './game'
 
 /** The fake browser's tabs. Locked ones can't be switched to (see `story/effects.ts`). */
@@ -42,5 +43,8 @@ export type GameEvent =
   | { type: 'copyCrashed'; copyId: string }
   /** One raw event out of a `tick`'s reconcile pass. Steps can gate on `event.event.kind`. */
   | { type: 'clusterEvent'; event: ClusterEvent }
+  /** One raw event out of a `tick`'s Argh CD pass (auto-sync, self-heal, …). Steps can gate on
+   * `event.event.kind`. See #53. */
+  | { type: 'gitOpsEvent'; event: GitOpsEvent }
   /** A status.inkwell.example update was posted (see `postStatusUpdate`, #17 and #31). */
   | { type: 'statusUpdatePosted'; update: StatusUpdate }
