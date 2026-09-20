@@ -284,6 +284,12 @@
   font: inherit;
 }
 
+.nameHint {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
 .optionCard {
   display: flex;
   align-items: center;

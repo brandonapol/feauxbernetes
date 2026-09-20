@@ -1,4 +1,7 @@
-import type { Action } from '../../engine/game'
+import { CHANNELS } from '../../content/channels'
+import type { Tab } from '../../engine/events'
+import type { Action, GameState } from '../../engine/game'
+import { labelForTab } from '../browser/tabs'
 
 /**
  * The `data-target` convention (issue #11): "Show me" finds the element for a step's `solution`
@@ -14,7 +17,20 @@ import type { Action } from '../../engine/game'
  * story/effect/clock actions aren't learner goals at all) — those return `undefined`, and the step
  * simply has no "Show me" button.
  */
-export function targetIdFor(action: Action): string | undefined {
+function latestPrId(state: GameState | undefined): string | undefined {
+  return state?.gitops.pullRequests.at(-1)?.id
+}
+
+function e2eJobId(state: GameState | undefined, pipelineId: string): string | undefined {
+  if (!state) return undefined
+  const pipeline =
+    pipelineId === 'latest'
+      ? Object.values(state.ci.pipelines).at(-1)
+      : state.ci.pipelines[pipelineId]
+  return pipeline?.stages.find((stage) => stage.name === 'End-to-end tests')?.jobs[0]?.id
+}
+
+export function targetIdFor(action: Action, state?: GameState): string | undefined {
   switch (action.type) {
     case 'clickTarget':
       return action.targetId
@@ -39,16 +55,16 @@ export function targetIdFor(action: Action): string | undefined {
     case 'openPR':
       return 'propose-change'
     case 'approvePR':
-      return `pr:${action.prId}:approve`
+      return `pr:${action.prId === 'latest' ? (latestPrId(state) ?? action.prId) : action.prId}:approve`
     case 'mergePR':
-      return `pr:${action.prId}:merge`
+      return `pr:${action.prId === 'latest' ? (latestPrId(state) ?? action.prId) : action.prId}:merge`
     case 'runJob':
     case 'startJob':
-      return `job:${action.jobId}`
+      return `job:${action.jobId === 'e2e' ? (e2eJobId(state, action.pipelineId) ?? action.jobId) : action.jobId}`
     case 'revertPR':
-      return `pr:${action.prId}:revert`
+      return `pr:${action.prId === 'latest' ? (latestPrId(state) ?? action.prId) : action.prId}:revert`
     case 'suggestFix':
-      return `pr:${action.prId}:fix:${action.fix}`
+      return `pr:${action.prId === 'latest' ? (latestPrId(state) ?? action.prId) : action.prId}:fix:${action.fix}`
     case 'sync':
       return `sync:${action.app}`
     case 'rollback':
@@ -56,6 +72,30 @@ export function targetIdFor(action: Action): string | undefined {
     default:
       return undefined
   }
+}
+
+/** Which fake-browser tab owns a Show me target, so we can switch to it first (#92). */
+export function tabForShowMeTarget(targetId: string): Tab | undefined {
+  if (targetId.startsWith('tab:')) return targetId.slice(4) as Tab
+  if (targetId.startsWith('channel:') || targetId.startsWith('reply:')) return 'flack'
+  if (targetId.startsWith('pr:') || targetId === 'propose-change' || targetId.startsWith('job:')) {
+    return 'gitnub'
+  }
+  if (
+    targetId.startsWith('copy:') ||
+    targetId.startsWith('app:') ||
+    targetId.startsWith('app-copy:') ||
+    targetId.startsWith('arghcd-') ||
+    targetId === 'database'
+  ) {
+    return 'arghcd'
+  }
+  if (targetId.startsWith('grafauxna-') || targetId.startsWith('rule:')) return 'grafauxna'
+  if (targetId.startsWith('page-')) return 'pagerdoody'
+  if (targetId.startsWith('overlay:') || targetId === 'view-as-yaml' || targetId === 'thermostat') {
+    return undefined
+  }
+  return undefined
 }
 
 /**
@@ -68,23 +108,30 @@ export function describeSolution(action: Action): string {
     case 'clickTarget':
       return 'Click the highlighted element.'
     case 'openTab':
-      return `Open the ${action.tab} tab.`
+      return `Open the ${labelForTab(action.tab)} tab.`
     case 'openOverlay':
       return 'Open the highlighted overlay.'
     case 'closeOverlay':
       return 'Close the overlay.'
     case 'chooseOption':
       return 'Choose the highlighted option.'
-    case 'openChannel':
-      return `Open the ${action.channel} channel.`
+    case 'openChannel': {
+      const channel = CHANNELS.find((candidate) => candidate.id === action.channel)
+      const name = channel?.name ?? action.channel
+      return channel?.kind === 'dm'
+        ? `Open ${name} in Flack’s sidebar.`
+        : `Open the #${name} channel.`
+    }
     case 'flackReply':
       return 'Send the highlighted reply.'
     case 'chooseWish':
       return `Ask for ${action.copies} ${action.copies === 1 ? 'copy' : 'copies'} of ${action.app}@${action.version}.`
     case 'unplugCopy':
       return 'Unplug the highlighted copy.'
-    case 'setBox':
-      return `Turn box ${action.boxId} ${action.on ? 'on' : 'off'}.`
+    case 'setBox': {
+      const box = action.boxId.replace(/^box-/, '').toUpperCase()
+      return `Turn box ${box} ${action.on ? 'on' : 'off'}.`
+    }
     case 'openPR':
       return 'Propose this change.'
     case 'approvePR':

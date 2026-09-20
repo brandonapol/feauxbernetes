@@ -119,7 +119,7 @@ export function OrderForm() {
           >
             Make it so
           </button>
-          <label className={styles.muted}>
+          <label className={styles.muted} data-target="view-as-yaml">
             <input
               type="checkbox"
               checked={showYaml}

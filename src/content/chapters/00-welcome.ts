@@ -64,7 +64,9 @@ export const welcomeChapter: Chapter = {
       id: 'meet-kai',
       title: 'Open Kai’s DM',
       body: 'Kai messaged you privately. Open **Kai Nakamura** in Flack’s sidebar.',
-      hints: ['Direct messages are the bottom of the Flack sidebar, under the channels.'],
+      hints: [
+        'If you’re not on Flack, click the Flack tab first. Direct messages are at the bottom of the Flack sidebar, under the channels.',
+      ],
       solution: { type: 'openChannel', channel: 'dm-kai' },
       goal: (_state, event) => event.type === 'channelOpened' && event.channel === 'dm-kai',
       afterNote:

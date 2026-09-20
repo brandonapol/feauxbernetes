@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Action } from '../../engine/game'
-import { describeSolution, findShowMeTarget, showMe, targetIdFor } from './showMe'
+import {
+  describeSolution,
+  findShowMeTarget,
+  showMe,
+  tabForShowMeTarget,
+  targetIdFor,
+} from './showMe'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -41,6 +47,27 @@ describe('targetIdFor', () => {
     }
   })
 
+  it('resolves latest PR and e2e job aliases against game state (#78)', () => {
+    const state = {
+      gitops: { pullRequests: [{ id: 'pr-real' }] },
+      ci: {
+        pipelines: {
+          p1: {
+            id: 'p1',
+            stages: [{ name: 'End-to-end tests', jobs: [{ id: 'p1-e2e-job' }] }],
+          },
+        },
+      },
+    } as never
+    expect(targetIdFor({ type: 'mergePR', prId: 'latest' }, state)).toBe('pr:pr-real:merge')
+    expect(targetIdFor({ type: 'runJob', pipelineId: 'latest', jobId: 'e2e' }, state)).toBe(
+      'job:p1-e2e-job'
+    )
+    expect(targetIdFor({ type: 'suggestFix', prId: 'latest', fix: 'fix-code' }, state)).toBe(
+      'pr:pr-real:fix:fix-code'
+    )
+  })
+
   it('has no single element for an action that is not a discrete click (e.g. typing a name)', () => {
     expect(targetIdFor({ type: 'setPlayerName', name: 'Ada' })).toBeUndefined()
     expect(targetIdFor({ type: 'showHint' })).toBeUndefined()
@@ -51,13 +78,29 @@ describe('targetIdFor', () => {
 describe('describeSolution', () => {
   it('describes every mapped action in plain English', () => {
     expect(describeSolution({ type: 'clickTarget', targetId: 'start' })).toMatch(/click/i)
-    expect(describeSolution({ type: 'openTab', tab: 'gitnub' })).toBe('Open the gitnub tab.')
+    expect(describeSolution({ type: 'openTab', tab: 'gitnub' })).toBe('Open the GitNub tab.')
+    expect(describeSolution({ type: 'openChannel', channel: 'dm-kai' })).toBe(
+      'Open Kai Nakamura in Flack’s sidebar.'
+    )
+    expect(describeSolution({ type: 'openChannel', channel: 'platform' })).toBe(
+      'Open the #platform channel.'
+    )
+    expect(describeSolution({ type: 'setBox', boxId: 'box-b', on: false })).toBe('Turn box B off.')
     expect(describeSolution({ type: 'chooseWish', app: 'search', version: '1.4', copies: 1 })).toBe(
       'Ask for 1 copy of search@1.4.'
     )
     expect(describeSolution({ type: 'chooseWish', app: 'search', version: '1.4', copies: 3 })).toBe(
       'Ask for 3 copies of search@1.4.'
     )
+  })
+})
+
+describe('tabForShowMeTarget', () => {
+  it('maps Flack / GitNub / Argh CD targets to the tab that owns them', () => {
+    expect(tabForShowMeTarget('channel:dm-kai')).toBe('flack')
+    expect(tabForShowMeTarget('pr:pr-1:merge')).toBe('gitnub')
+    expect(tabForShowMeTarget('app:search')).toBe('arghcd')
+    expect(tabForShowMeTarget('tab:inkwell')).toBe('inkwell')
   })
 })
 
