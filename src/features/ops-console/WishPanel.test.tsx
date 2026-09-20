@@ -3,7 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { createGameStore, GameStoreProvider, type StorageLike } from '../../store'
-import { DELETE_EVERYTHING, SCALE_SEARCH, testConfig } from './__fixtures__/testConfig'
+import { showMe } from '../instructions/showMe'
+import {
+  DELETE_EVERYTHING,
+  SCALE_SEARCH,
+  TURN_OFF_BOX_B,
+  UNPLUG_SEARCH,
+  testConfig,
+} from './__fixtures__/testConfig'
 import { WishPanel } from './WishPanel'
 
 const noStorage: StorageLike = {
@@ -82,6 +89,19 @@ describe('WishPanel', () => {
       channel: 'platform',
       text: DELETE_EVERYTHING.veto,
     })
+  })
+
+  it('Show me focuses the correct control for chooseWish, unplugCopy and setBox (#57)', () => {
+    renderPanel({ wishOptions: [SCALE_SEARCH, UNPLUG_SEARCH, TURN_OFF_BOX_B] })
+
+    expect(showMe('wish:search')).toBe(true)
+    expect(document.activeElement).toHaveAttribute('data-target', 'wish:search')
+
+    expect(showMe('copy:search-1')).toBe(true)
+    expect(document.activeElement).toHaveAttribute('data-target', 'copy:search-1')
+
+    expect(showMe('box:box-b')).toBe(true)
+    expect(document.activeElement).toHaveAttribute('data-target', 'box:box-b')
   })
 
   it('renders a YAML alternative, line by line, when a wish provides one', async () => {

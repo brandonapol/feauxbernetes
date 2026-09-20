@@ -49,7 +49,12 @@ export function OverlayHost() {
           <h2 id="overlay-title" tabIndex={-1} ref={headingRef} className={styles.title}>
             {titleFor(overlay)}
           </h2>
-          <button type="button" className={styles.close} onClick={close}>
+          <button
+            type="button"
+            className={styles.close}
+            data-target="close-overlay"
+            onClick={close}
+          >
             Close
           </button>
         </div>

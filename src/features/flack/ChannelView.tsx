@@ -141,6 +141,7 @@ function Message({ message, name, character, grouped, onReply }: MessageProps) {
                 key={reply.id}
                 type="button"
                 className={styles.reply}
+                data-target={`reply:${message.id}:${reply.id}`}
                 onClick={() => onReply(reply.id)}
               >
                 {reply.text}

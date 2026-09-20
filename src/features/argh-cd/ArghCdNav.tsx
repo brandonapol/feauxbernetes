@@ -19,6 +19,7 @@ export function ArghCdNav() {
           to="/argh-cd/applications"
           className={styles.link}
           aria-current={onBoxes ? undefined : 'page'}
+          data-target="arghcd-applications"
         >
           Applications
         </Link>
@@ -26,6 +27,7 @@ export function ArghCdNav() {
           to="/argh-cd/boxes"
           className={styles.link}
           aria-current={onBoxes ? 'page' : undefined}
+          data-target="arghcd-boxes"
         >
           Boxes
         </Link>
