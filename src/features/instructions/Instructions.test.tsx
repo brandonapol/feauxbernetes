@@ -169,7 +169,7 @@ afterEach(() => {
 describe('Instructions panel', () => {
   it('shows the chapter number, title and progress', () => {
     const { store } = setup()
-    expect(screen.getByText('Chapter 1 of 3')).toBeInTheDocument()
+    expect(screen.getByText('Chapter 1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'A toy chapter', level: 1 })).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Chapter progress' })).toHaveAttribute(
       'aria-valuenow',

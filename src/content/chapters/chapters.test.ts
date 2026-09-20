@@ -31,6 +31,7 @@ describe('chapters', () => {
     expect(state.story.phase).toBe('complete')
     expect(state.cluster.wishes.search?.copies).toBe(3)
     expect(trace).toContain('make-it-so')
+    expect(trace).toContain('watch-has')
     expect(playChapterRecoverably(config, '02-order-form').state.story.phase).toBe('complete')
   })
 
@@ -54,6 +55,7 @@ describe('chapters', () => {
     const { state, trace } = playChapter(config, '05-ci')
     expect(state.story.phase).toBe('complete')
     expect(trace).toContain('run-e2e')
+    expect(trace).toContain('what-wrong')
     expect(trace).toContain('suggest-fix')
     expect(trace).toContain('merge-fix')
     expect(state.gitops.pullRequests[0].status).toBe('merged')
@@ -74,7 +76,7 @@ describe('chapters', () => {
   it('Ch 7 golden path', () => {
     const { state, trace } = playChapter(config, 'ch7-slo')
     expect(state.story.phase).toBe('complete')
-    expect(trace).toEqual(['choose-sli', 'choose-target', 'budget-policy'])
+    expect(trace).toEqual(['open-slos', 'choose-sli', 'choose-target', 'budget-policy'])
     expect(playChapterRecoverably(config, 'ch7-slo').state.story.phase).toBe('complete')
   })
 

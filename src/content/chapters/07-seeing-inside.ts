@@ -44,7 +44,8 @@ export const seeingInsideChapter: Chapter = {
         },
         {
           id: 'golden',
-          label: 'How slow, how busy, how many errors, how full — latency, traffic, errors, saturation.',
+          label:
+            'How slow, how busy, how many errors, how full — latency, traffic, errors, saturation.',
         },
         {
           id: 'logs',
@@ -64,12 +65,32 @@ export const seeingInsideChapter: Chapter = {
     {
       id: 'open-logs',
       title: 'Open Logs',
-      body: 'Open **Logs** in Grafauxna. Filter to **billing** and type **checkout** in search. This is the only other box you’ll type in besides your name.',
+      body: 'Open **Logs** in Grafauxna. Filter chips pick a service (web, search, billing) and a level (error, warn, info, debug). Type in search to narrow the English lines. This is the only other box you’ll type in besides your name.',
       hints: ['Logs is in Grafauxna’s own nav.'],
       solution: { type: 'clickTarget', targetId: 'grafauxna-logs' },
       goal: (_state, event) =>
         event.type === 'targetClicked' && event.targetId === 'grafauxna-logs',
       afterNote: 'Logs are the story. Charts are the plot. You need both.',
+    },
+    {
+      id: 'match-signal',
+      title: 'Match a signal to a log',
+      body: 'On **Dashboards**, Errors is “how many requests fail.” On **Logs**, each line is tagged error, warn, info or debug. If Errors ticks up, which log filter do you open first?',
+      hints: ['The Errors chart is the error rate. Start with error lines.'],
+      options: [
+        { id: 'debug', label: 'debug — that’s where the detail is.' },
+        { id: 'error', label: 'error — that’s the same signal as the Errors chart.' },
+        { id: 'info', label: 'info — everything important is info.' },
+      ],
+      solution: { type: 'chooseOption', stepId: 'match-signal', optionId: 'error' },
+      goal: (_state, event) =>
+        event.type === 'optionChosen' &&
+        event.stepId === 'match-signal' &&
+        event.optionId === 'error',
+      wrongAnswers: {
+        debug: 'Kai: "Debug is noisy. When Errors is up, start with [error] lines."',
+        info: 'Kai: "Info is routine. The Errors chart is the error rate — filter Logs to error."',
+      },
     },
   ],
   mentorQuestions: ['slo-vs-sla'],

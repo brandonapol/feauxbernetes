@@ -21,9 +21,10 @@ npm ci
 npm run dev
 ```
 
-Node 24 (see `.nvmrc`). The first time you run `npm run e2e`, install its browser with
-`npx playwright install chromium`. Add `?fast=1` to the URL to shrink every scripted delay a
-hundredfold (the E2E tests do).
+**Node 24** is what `.nvmrc` and CI use (`nvm use`). Node **22.22+** often works for `npm run dev`
+but you may see `EBADENGINE` warnings from packages that ask for 24. The first time you run
+`npm run e2e`, install its browser with `npx playwright install chromium`. Add `?fast=1` to the
+URL to shrink every scripted delay a hundredfold (the E2E tests do).
 
 Every push to `main` publishes the built site to the `github-pages` branch, which GitHub Pages
 serves (`.github/workflows/pages-branch.yml`). Builds use the base path `/feauxbernetes/`; set

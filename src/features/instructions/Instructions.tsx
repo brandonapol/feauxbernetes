@@ -38,7 +38,6 @@ export function Instructions() {
   if (!chapter) return <div className={styles.panel} />
 
   const numbered = config.chapters.filter((candidate) => candidate.milestone !== 'bonus')
-  const number = config.chapters.findIndex((candidate) => candidate.id === chapter.id) + 1
   const done = story.completedSteps.length + story.skippedSteps.length
   const progress =
     chapter.steps.length === 0 ? 100 : Math.round((done / chapter.steps.length) * 100)
@@ -70,9 +69,7 @@ export function Instructions() {
     <div className={styles.panel}>
       <header className={styles.header}>
         <p className={styles.chapterNumber}>
-          {chapter.milestone === 'bonus'
-            ? 'Bonus chapter'
-            : `Chapter ${number} of ${numbered.length}`}
+          {chapter.milestone === 'bonus' ? 'Bonus chapter' : chapterLabel(chapter.id, numbered)}
         </p>
         <h1 className={styles.chapterTitle}>{fill(chapter.title)}</h1>
         <div
@@ -277,6 +274,15 @@ export function Instructions() {
 }
 
 const PLAYER_NAME_MAX = 40
+
+/** Planning numbers chapters 0–N. Wrap is unnumbered. Ids like `00-welcome` and `ch6-seeing-inside`. */
+function chapterLabel(id: string, numbered: { id: string }[]): string {
+  if (id === '06-wrap') return 'Week-one wrap'
+  const match = id.match(/^(?:ch)?0*(\d+)/)
+  if (match) return `Chapter ${Number(match[1])}`
+  const index = numbered.findIndex((candidate) => candidate.id === id)
+  return index >= 0 ? `Chapter ${index}` : 'Chapter'
+}
 
 /** The only free-text input besides log search: the learner's name, captured in Ch 0. */
 function NameField() {

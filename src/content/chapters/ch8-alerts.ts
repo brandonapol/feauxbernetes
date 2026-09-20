@@ -33,7 +33,7 @@ export const alertsChapter: Chapter = {
     {
       id: 'pick-rule',
       title: 'Which rule would you sleep under?',
-      body: '“Page on any error” fires constantly, including overnight. “Errors > 5% for 30 min” is slow on the real incident. The burn-rate rule pages once, for the real outage. Which do we keep as the page?',
+      body: 'Look at **Replay**: each rule shows how many times it would have paged last week. Which rule would you actually sleep under?',
       hints: ['The one that pages for the real incident, not the blips.'],
       thinking:
         'A page has to earn 3am. Noise trains you to ignore the pager — that’s how real outages get missed.',

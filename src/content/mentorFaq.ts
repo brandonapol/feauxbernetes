@@ -69,5 +69,6 @@ export const MENTOR_FAQ: Record<string, MentorEntry> = {
   },
 }
 
-/** Ask Kai always offers every question — no chapter has `mentorQuestions` of its own yet. */
-export const GENERAL_QUESTIONS: string[] = Object.keys(MENTOR_FAQ)
+/** Always-on Ask Kai prompts. Chapter `mentorQuestions` are listed first and should be the
+ * chapter-relevant ones; these two are the fallback everyone might still ask. */
+export const GENERAL_QUESTIONS: string[] = ['what-is-a-pod', 'why-not-restart']

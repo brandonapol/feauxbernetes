@@ -22,6 +22,15 @@ export const sloChapter: Chapter = {
   },
   steps: [
     {
+      id: 'open-slos',
+      title: 'Read the error budget',
+      body: 'Open **SLOs** in Grafauxna. Read the remaining error budget (it’s in minutes, with a gauge). That’s the tank. Come back when you’ve seen the number.',
+      hints: ['SLOs is in Grafauxna’s own nav, next to Logs.'],
+      solution: { type: 'clickTarget', targetId: 'grafauxna-slos' },
+      goal: (_state, event) =>
+        event.type === 'targetClicked' && event.targetId === 'grafauxna-slos',
+    },
+    {
       id: 'choose-sli',
       title: 'Choose an SLI',
       body: 'Which number best tells us whether **checkout** is working for customers?',
@@ -42,7 +51,8 @@ export const sloChapter: Chapter = {
         event.optionId === 'checkout',
       wrongAnswers: {
         cpu: 'Kai: "Customers don’t feel CPU. A box can be busy and checkout still works — or idle and checkout is on fire."',
-        copies: 'Kai: "Three healthy copies of a broken version still fail checkout. Copies are capacity, not success."',
+        copies:
+          'Kai: "Three healthy copies of a broken version still fail checkout. Copies are capacity, not success."',
         tickets:
           'Kai: "Tickets lag. By the time support hears it, the budget is already spent. Use the checkout itself."',
       },
@@ -77,7 +87,8 @@ export const sloChapter: Chapter = {
       title: 'When the tank is low',
       body: 'The error budget is a fuel gauge. Past incidents drain it. The team’s policy is to pause risky launches when the tank is low. The budget is almost empty. What should we do?',
       hints: ['Protect the remaining budget. Don’t ship a risky change.'],
-      thinking: 'Budget low means we already spent our allowed failures. More risk now is how you get a worse week.',
+      thinking:
+        'Budget low means we already spent our allowed failures. More risk now is how you get a worse week.',
       options: [
         { id: 'ship', label: 'Ship Alex’s big refactor anyway — we need the features.' },
         { id: 'pause', label: 'Pause risky launches until the budget recovers.' },

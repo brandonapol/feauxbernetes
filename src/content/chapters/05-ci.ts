@@ -69,7 +69,7 @@ export const ciChapter: Chapter = {
     {
       id: 'open-pr',
       title: 'Open Alex’s pull request',
-      body: 'Open **GitNub**, then **inkwell/web**, then the open pull request. Build and unit tests are already green. End-to-end tests are waiting for you.',
+      body: 'GitNub is already open. Open **inkwell/web**, then the pull request **Stricter sign-up email check**. Build and unit tests are already green. End-to-end tests are waiting for you.',
       hints: ['GitNub → web → Pull requests.'],
       solution: { type: 'openTab', tab: 'gitnub' },
       goal: (state, event) =>
@@ -84,6 +84,28 @@ export const ciChapter: Chapter = {
       goal: (_state, event) => event.type === 'jobRan',
       afterNote:
         'A visitor named sam.wilson@example.com couldn’t sign up. The new email check rejects any address with a dot in it.',
+    },
+    {
+      id: 'what-wrong',
+      title: 'What went wrong?',
+      body: 'Read the English report (Show report if it isn’t open). Why did the test fail?',
+      hints: ['The report names the email check and an address with a dot in it.'],
+      options: [
+        { id: 'timeout', label: 'The page was too slow to load.' },
+        {
+          id: 'dot',
+          label:
+            'The new email check rejects addresses with a dot in the name, like sam.wilson@example.com.',
+        },
+        { id: 'network', label: 'The test runner lost its network.' },
+      ],
+      solution: { type: 'chooseOption', stepId: 'what-wrong', optionId: 'dot' },
+      goal: (_state, event) =>
+        event.type === 'optionChosen' && event.stepId === 'what-wrong' && event.optionId === 'dot',
+      wrongAnswers: {
+        timeout: 'Kai: "The report doesn’t mention slowness. Look at the email address it typed."',
+        network: 'Kai: "The robots still reached the site. The failure is the email check itself."',
+      },
     },
     {
       id: 'suggest-fix',
