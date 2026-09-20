@@ -8,7 +8,7 @@ import { ConfirmButton } from './ConfirmButton'
 import styles from './Instructions.module.css'
 import { InstructionsText } from './InstructionsText'
 import { MultipleChoice } from './MultipleChoice'
-import { describeSolution, showMe, targetIdFor } from './showMe'
+import { describeSolution, showMe, tabForShowMeTarget, targetIdFor } from './showMe'
 import { StepList } from './StepList'
 import { ThinkingCallout } from './ThinkingCallout'
 import { WhereIsMyChange } from './WhereIsMyChange'
@@ -55,8 +55,15 @@ export function Instructions() {
 
   const onShowMe = () => {
     dispatch({ type: 'revealSolution' })
-    const targetId = step?.solution && targetIdFor(step.solution)
-    if (targetId) showMe(targetId)
+    const targetId = step?.solution && targetIdFor(step.solution, game)
+    if (!targetId) return
+    const tab = tabForShowMeTarget(targetId)
+    if (tab && tab !== game.ui.activeTab && game.ui.unlockedTabs.includes(tab)) {
+      dispatch({ type: 'openTab', tab })
+      window.setTimeout(() => showMe(targetId), 50)
+      return
+    }
+    showMe(targetId)
   }
 
   return (
@@ -269,6 +276,8 @@ export function Instructions() {
   )
 }
 
+const PLAYER_NAME_MAX = 40
+
 /** The only free-text input besides log search: the learner's name, captured in Ch 0. */
 function NameField() {
   const dispatch = useDispatch()
@@ -287,9 +296,11 @@ function NameField() {
         Your name
         <input
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => setName(event.target.value.slice(0, PLAYER_NAME_MAX))}
+          maxLength={PLAYER_NAME_MAX}
           autoComplete="nickname"
         />
+        <span className={styles.nameHint}>Up to {PLAYER_NAME_MAX} characters.</span>
       </label>
       <button type="submit" className={styles.primary} disabled={!name.trim()}>
         That&rsquo;s me

@@ -445,8 +445,11 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
     case 'closeOverlay':
       return advanceStory(config, state, [], [action])
 
-    case 'setPlayerName':
-      return advanceStory(config, state, [{ type: 'playerNamed', name: action.name }])
+    case 'setPlayerName': {
+      const name = action.name.trim().slice(0, 40)
+      if (!name) return { state: previous, effects: [] }
+      return advanceStory(config, state, [{ type: 'playerNamed', name }])
+    }
 
     case 'openChannel':
       return advanceStory(config, openChannelState(state, action.channel), [
