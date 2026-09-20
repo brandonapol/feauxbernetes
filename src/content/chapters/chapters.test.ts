@@ -59,6 +59,12 @@ describe('chapters', () => {
     expect(state.gitops.pullRequests[0].status).toBe('merged')
   })
 
+  it('week-one wrap golden path', () => {
+    const { state } = playChapter(config, '06-wrap')
+    expect(state.story.phase).toBe('complete')
+    expect(playChapterRecoverably(config, '06-wrap').state.story.phase).toBe('complete')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)
