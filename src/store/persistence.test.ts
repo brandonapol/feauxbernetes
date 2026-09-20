@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { GAME_STATE_VERSION, blankState, type GameState } from '../engine/game'
 import { toyConfig } from '../engine/story/__fixtures__/toyChapter'
 import {
+  MAX_SAVED_CI_NOTICES,
   MAX_SAVED_CLUSTER_EVENTS,
+  MAX_SAVED_GITOPS_EVENTS,
   MAX_SAVED_MESSAGES,
   STORAGE_KEY,
   browserStorage,
@@ -57,6 +59,26 @@ function withClusterEvents(state: GameState, count: number): GameState {
     appId: 'search',
   }))
   return { ...state, clusterEvents }
+}
+
+function withGitopsEvents(state: GameState, count: number): GameState {
+  const gitopsEvents = Array.from({ length: count }, (_, i) => ({
+    at: state.clock.now + i,
+    kind: 'AutoSync' as const,
+    raw: `Sync operation succeeded for search (${i})`,
+    english: `Argh CD made the cluster match GitNub: search is now 3 copies of v1.${i}.`,
+    appId: 'search',
+  }))
+  return { ...state, gitopsEvents }
+}
+
+function withCiNotices(state: GameState, count: number): GameState {
+  const ciNotices = Array.from({ length: count }, (_, i) => ({
+    at: state.clock.now + i,
+    raw: `Build #${i} passed`,
+    english: `Build ${i} passed.`,
+  }))
+  return { ...state, ciNotices }
 }
 
 describe('loadSave / writeSave round trip', () => {
@@ -118,6 +140,30 @@ describe('capping for storage', () => {
     expect(loaded.save.game.clusterEvents).toHaveLength(MAX_SAVED_CLUSTER_EVENTS)
     expect(loaded.save.game.clusterEvents.at(-1)?.raw).toBe(
       `Scheduled search-${MAX_SAVED_CLUSTER_EVENTS + 49} to box-1`
+    )
+  })
+
+  it('keeps only the most recent MAX_SAVED_GITOPS_EVENTS gitops events', () => {
+    const storage = memoryStorage()
+    const game = withGitopsEvents(blankState(config), MAX_SAVED_GITOPS_EVENTS + 50)
+    writeSave(storage, game, [])
+    const loaded = loadSave(storage)
+    if (loaded.kind !== 'loaded') throw new Error('expected a loaded save')
+    expect(loaded.save.game.gitopsEvents).toHaveLength(MAX_SAVED_GITOPS_EVENTS)
+    expect(loaded.save.game.gitopsEvents.at(-1)?.raw).toBe(
+      `Sync operation succeeded for search (${MAX_SAVED_GITOPS_EVENTS + 49})`
+    )
+  })
+
+  it('keeps only the most recent MAX_SAVED_CI_NOTICES CI notices', () => {
+    const storage = memoryStorage()
+    const game = withCiNotices(blankState(config), MAX_SAVED_CI_NOTICES + 50)
+    writeSave(storage, game, [])
+    const loaded = loadSave(storage)
+    if (loaded.kind !== 'loaded') throw new Error('expected a loaded save')
+    expect(loaded.save.game.ciNotices).toHaveLength(MAX_SAVED_CI_NOTICES)
+    expect(loaded.save.game.ciNotices.at(-1)?.raw).toBe(
+      `Build #${MAX_SAVED_CI_NOTICES + 49} passed`
     )
   })
 

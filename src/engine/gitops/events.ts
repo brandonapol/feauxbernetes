@@ -22,8 +22,9 @@ export interface GitOpsEvent {
 /** `#deploys` gets a one-line plain-data notice for the same four events. This engine only ever
  * returns data — wrapping one in a `gitOpsNotice` effect (see `story/types.ts`) and applying it
  * turns it into a `#deploys` Flack message from the Argh CD bot. That wiring is #12's; actually
- * calling `sync`/`tick` from the store's `reduce` and emitting the effect is #16's (Argh CD, part
- * 2), once the gitops engine's state slot on `GameState` stops being a placeholder. */
+ * calling `tick` from the store's `reduce` and emitting the effect for each notice is #53's
+ * (`engine/game.ts`'s `tick`). `sync` (the manual **Sync** button) still waits on #14/#16 for a
+ * `reduce` case of its own. */
 export interface GitOpsNotice {
   at: number
   channel: 'deploys'
