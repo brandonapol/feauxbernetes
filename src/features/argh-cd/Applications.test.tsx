@@ -21,7 +21,8 @@ describe('Applications', () => {
     const web = screen.getByRole('link', { name: /^web/ })
     expect(within(web).getByText('Healthy')).toBeInTheDocument()
     expect(within(web).getByText('wants 3 · has 3')).toBeInTheDocument()
-    expect(within(web).getByText('version 1.8')).toBeInTheDocument()
+    expect(within(web).getByText(/GitNub asks for 1\.8 · running 1\.8/)).toBeInTheDocument()
+    expect(within(web).getByText('Synced')).toBeInTheDocument()
   })
 
   it('gives the database tile a 🐉 badge and its own health and version, with no wants/has line', () => {

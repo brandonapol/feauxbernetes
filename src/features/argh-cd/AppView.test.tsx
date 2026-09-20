@@ -90,6 +90,66 @@ describe('AppView', () => {
     expect(screen.getByText('wants 3 · has 3')).toBeInTheDocument()
   })
 
+  it('shows GitNub says / cluster has, a Sync button, and a drift diff (#16)', () => {
+    const store = renderArghCd('#/argh-cd/app/search')
+    advanceTicks()
+
+    expect(screen.getByText(/GitNub says/)).toBeInTheDocument()
+    expect(screen.getByText(/Cluster has/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sync' })).toHaveAttribute(
+      'data-target',
+      'sync:search'
+    )
+
+    act(() => {
+      store.getState().dispatch({
+        type: 'chooseWish',
+        app: 'search',
+        version: '1.4',
+        copies: 6,
+      })
+    })
+    expect(screen.getByText(/GitNub says 3 copies/)).toBeInTheDocument()
+    expect(screen.getByText(/The cluster has 6/)).toBeInTheDocument()
+  })
+
+  it('Rollback from history syncs the older version and explains that GitNub will put it back', () => {
+    const store = renderArghCd('#/argh-cd/app/search')
+    advanceTicks()
+
+    act(() => {
+      store.getState().dispatch({ type: 'sync', app: 'search' })
+    })
+    expect(screen.getByRole('button', { name: 'Rollback' })).toHaveAttribute('data-target')
+    expect(store.getState().game.gitopsEvents.some((event) => event.kind === 'ManualSync')).toBe(
+      true
+    )
+
+    act(() => {
+      const history = store.getState().game.gitops.apps.search?.history.at(-1)
+      store.setState((s) => ({
+        game: {
+          ...s.game,
+          gitops: {
+            ...s.game.gitops,
+            deployRepo: {
+              ...s.game.gitops.deployRepo,
+              wishes: {
+                ...s.game.gitops.deployRepo.wishes,
+                search: { app: 'search', version: '9.9', copies: 3 },
+              },
+            },
+          },
+        },
+      }))
+      if (history) {
+        store.getState().dispatch({ type: 'rollback', app: 'search', historyId: history.id })
+      }
+    })
+    expect(store.getState().game.cluster.wishes.search?.version).toBe('1.4')
+    expect(screen.getByText(/GitNub still says 9\.9/)).toBeInTheDocument()
+  })
+
   it('has no serious accessibility problems, with a copy drawer open', async () => {
     renderArghCd('#/argh-cd/app/search')
     settleCluster()
