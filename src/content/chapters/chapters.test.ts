@@ -18,6 +18,14 @@ describe('chapters', () => {
     expect(recovered.state.story.phase).toBe('complete')
   })
 
+  it('Ch 1 golden path and recoverability', () => {
+    const { state, trace } = playChapter(config, '01-boxes')
+    expect(state.story.phase).toBe('complete')
+    expect(trace).toContain('open-search')
+    expect(trace).toContain('reply-robin')
+    expect(playChapterRecoverably(config, '01-boxes').state.story.phase).toBe('complete')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)

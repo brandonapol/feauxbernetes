@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { health, summary, type ClusterState } from '../../engine/cluster'
 import { appSyncStatus, type GitOpsState } from '../../engine/gitops'
 import { SERVICES, type ServiceInfo } from '../../content'
-import { useGame } from '../../store'
+import { useDispatch, useGame } from '../../store'
 import styles from './Applications.module.css'
 import { HealthBadge } from './HealthBadge'
 import { SyncBadge } from './SyncBadge'
@@ -58,6 +58,7 @@ function AppTile({
   gitops: GitOpsState
   now: number
 }) {
+  const dispatch = useDispatch()
   const repoWish = gitops.deployRepo.wishes[service.id]
   const running = cluster.wishes[service.id]
   const last = gitops.apps[service.id]?.history.at(-1)
@@ -66,6 +67,7 @@ function AppTile({
       to={`/argh-cd/app/${service.id}`}
       className={styles.tile}
       data-target={`app:${service.id}`}
+      onClick={() => dispatch({ type: 'clickTarget', targetId: `app:${service.id}` })}
     >
       <h2 className={styles.tileName}>{service.name}</h2>
       <p className={styles.tileDescription}>{service.description}</p>
@@ -84,8 +86,14 @@ function AppTile({
 
 function DatabaseTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterState }) {
   const { database } = cluster
+  const dispatch = useDispatch()
   return (
-    <Link to="/argh-cd/database" className={styles.tile} data-target="database">
+    <Link
+      to="/argh-cd/database"
+      className={styles.tile}
+      data-target="database"
+      onClick={() => dispatch({ type: 'clickTarget', targetId: 'database' })}
+    >
       <h2 className={styles.tileName}>
         <span aria-hidden="true">🐉</span> {service.name}
       </h2>
