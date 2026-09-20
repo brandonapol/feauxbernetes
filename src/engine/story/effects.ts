@@ -8,6 +8,26 @@ export interface EffectResult {
   events: GameEvent[]
 }
 
+/** Every `GitOpsNotice` (see `types.ts` → `gitOpsNotice`) is posted from Argh CD. */
+const ARGH_CD_BOT = 'arghcd'
+
+/**
+ * Switches Flack's active channel and marks it read — the `openChannel` action (learner clicks a
+ * channel) and the `openChannel` effect (a script focuses one, e.g. declaring an incident) share
+ * this so the two never drift apart.
+ */
+export function openChannelState(state: GameState, channel: string): GameState {
+  const count = state.flack.messages.filter((m) => m.channel === channel).length
+  return {
+    ...state,
+    flack: {
+      ...state.flack,
+      activeChannel: channel,
+      readUpTo: { ...state.flack.readUpTo, [channel]: count },
+    },
+  }
+}
+
 /** Applies one effect right now, ignoring any delay. */
 export function applyEffect(config: GameConfig, state: GameState, effect: Effect): EffectResult {
   switch (effect.type) {
@@ -28,6 +48,7 @@ export function applyEffect(config: GameConfig, state: GameState, effect: Effect
               })),
             }
           : {}),
+        ...(effect.card ? { card: effect.card } : {}),
       }
       const watching =
         state.ui.activeTab === 'flack' && state.flack.activeChannel === effect.channel
@@ -96,5 +117,36 @@ export function applyEffect(config: GameConfig, state: GameState, effect: Effect
         events: [],
       }
     }
+
+    case 'createChannel': {
+      if (state.flack.dynamicChannels.some((channel) => channel.id === effect.channel.id)) {
+        return { state, events: [] }
+      }
+      return {
+        state: {
+          ...state,
+          flack: {
+            ...state.flack,
+            dynamicChannels: [...state.flack.dynamicChannels, effect.channel],
+            readUpTo: { ...state.flack.readUpTo, [effect.channel.id]: 0 },
+          },
+        },
+        events: [{ type: 'channelCreated', channelId: effect.channel.id }],
+      }
+    }
+
+    case 'openChannel':
+      return {
+        state: openChannelState(state, effect.channel),
+        events: [{ type: 'channelOpened', channel: effect.channel }],
+      }
+
+    case 'gitOpsNotice':
+      return applyEffect(config, state, {
+        type: 'flackMessage',
+        channel: effect.notice.channel,
+        from: ARGH_CD_BOT,
+        text: effect.notice.text,
+      })
   }
 }

@@ -212,6 +212,125 @@ describe('effects', () => {
   })
 })
 
+describe('Flack channels and bots (#12)', () => {
+  it('createChannel effect adds a channel and marks it unread-zero, idempotently', () => {
+    const channel = {
+      id: 'inc-1-billing-outage',
+      name: 'inc-1-billing-outage',
+      kind: 'channel' as const,
+    }
+    const once = play(config, started(), [
+      { type: 'applyEffect', effect: { type: 'createChannel', channel } },
+    ])
+    expect(once.flack.dynamicChannels).toEqual([channel])
+    expect(once.flack.readUpTo['inc-1-billing-outage']).toBe(0)
+
+    const twice = play(config, once, [
+      { type: 'applyEffect', effect: { type: 'createChannel', channel } },
+    ])
+    expect(twice.flack.dynamicChannels).toEqual([channel])
+  })
+
+  it('openChannel effect focuses a channel the same way the action does', () => {
+    const channel = {
+      id: 'inc-1-billing-outage',
+      name: 'inc-1-billing-outage',
+      kind: 'channel' as const,
+    }
+    const withChannel = play(config, started(), [
+      { type: 'applyEffect', effect: { type: 'createChannel', channel } },
+      {
+        type: 'applyEffect',
+        effect: { type: 'flackMessage', channel: channel.id, from: 'morgan', text: 'Declared.' },
+      },
+    ])
+    const focused = play(config, withChannel, [
+      { type: 'applyEffect', effect: { type: 'openChannel', channel: channel.id } },
+    ])
+    expect(focused.flack.activeChannel).toBe(channel.id)
+    expect(focused.flack.readUpTo[channel.id]).toBe(1)
+  })
+
+  it('gitOpsNotice effect posts a #deploys message from the Argh CD bot', () => {
+    const state = play(config, started(), [
+      {
+        type: 'applyEffect',
+        effect: {
+          type: 'gitOpsNotice',
+          notice: {
+            at: 0,
+            channel: 'deploys',
+            text: 'Argh CD synced billing to 2.4.1 ✅',
+            appId: 'billing',
+          },
+        },
+      },
+    ])
+    expect(state.flack.messages.at(-1)).toMatchObject({
+      channel: 'deploys',
+      from: 'arghcd',
+      text: 'Argh CD synced billing to 2.4.1 ✅',
+    })
+  })
+
+  it('a bot card rides along on a flackMessage effect', () => {
+    const state = play(config, started(), [
+      {
+        type: 'applyEffect',
+        effect: {
+          type: 'flackMessage',
+          channel: 'team',
+          from: 'arghcd',
+          text: 'Synced billing.',
+          card: { title: 'billing synced', fields: [{ label: 'Version', value: '2.4.1' }] },
+        },
+      },
+    ])
+    expect(state.flack.messages.at(-1)?.card).toEqual({
+      title: 'billing synced',
+      fields: [{ label: 'Version', value: '2.4.1' }],
+    })
+  })
+})
+
+describe('Ask Kai (#12)', () => {
+  const mentorConfig: GameConfig = {
+    ...config,
+    mentor: {
+      characterId: 'jordan',
+      channel: 'team',
+      entries: {
+        'what-is-git': {
+          question: 'What is Git?',
+          answer: 'A time machine for files.',
+          docs: { label: 'Git docs', href: 'https://git-scm.com/doc' },
+        },
+      },
+    },
+  }
+
+  it('posts the question and the answer, with the docs link appended', () => {
+    const state = play(mentorConfig, started(), [{ type: 'askMentor', questionId: 'what-is-git' }])
+    const [question, answer] = state.flack.messages.slice(-2)
+    expect(question).toMatchObject({ from: 'player', text: 'What is Git?' })
+    expect(answer).toMatchObject({ from: 'jordan' })
+    expect(answer.text).toContain('A time machine for files.')
+    expect(answer.text).toContain('[Git docs](https://git-scm.com/doc)')
+  })
+
+  it('an unknown question id is a harmless no-op besides the event', () => {
+    const before = started()
+    const after = play(mentorConfig, before, [{ type: 'askMentor', questionId: 'nope' }])
+    expect(after.flack.messages).toEqual(before.flack.messages)
+  })
+
+  it('does nothing when the config has no mentor at all', () => {
+    const before = started()
+    const after = play(config, before, [{ type: 'askMentor', questionId: 'what-is-git' }])
+    expect(after.flack.messages).toEqual(before.flack.messages)
+  })
+})
+
 describe('restart', () => {
   it('restores the checkpoint taken when the chapter started', () => {
     const fresh = started()

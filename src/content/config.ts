@@ -1,13 +1,14 @@
 import type { GameConfig } from '../engine/story/types'
-import { CHANNELS, DEFAULT_CHANNEL } from './channels'
+import { CHANNELS, DEFAULT_CHANNEL, MENTOR_CHANNEL } from './channels'
 import { CHAPTERS } from './chapters'
 import { characters } from './characters'
+import { GENERAL_QUESTIONS, MENTOR_FAQ } from './mentorFaq'
 import { WORLD_START } from './world'
 
 /**
  * Assembles the engine's `GameConfig` from `src/content`. `main.tsx` calls this once, at startup.
- * `chapters` and `channels` are still placeholders (see their own files) until chapter content
- * (#18 onward) and Flack (#12) land — everything else here is real.
+ * `chapters` is still a placeholder (see `chapters/index.ts`) until chapter content (#18 onward)
+ * lands — everything else here is real.
  */
 export function createGameConfig(): GameConfig {
   return {
@@ -16,5 +17,7 @@ export function createGameConfig(): GameConfig {
     channels: CHANNELS,
     defaultChannel: DEFAULT_CHANNEL,
     startTime: WORLD_START,
+    mentor: { characterId: 'kai', channel: MENTOR_CHANNEL, entries: MENTOR_FAQ },
+    mentorGeneralQuestions: GENERAL_QUESTIONS,
   }
 }

@@ -8,9 +8,9 @@ test('the three-column layout, tab switching, deep links and locked tabs', async
   await expect(page.getByRole('main', { name: 'Browser' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Ops Console' })).toBeVisible()
 
-  // Opens on Flack.
+  // Opens on Flack, redirected to its default channel (#12).
   await expect(page.getByRole('tab', { name: /Flack/ })).toHaveAttribute('aria-selected', 'true')
-  await expect(page).toHaveURL(/#\/flack$/)
+  await expect(page).toHaveURL(/#\/flack\/platform$/)
 
   // Tab switching, by click and by keyboard.
   await page.getByRole('tab', { name: 'Argh CD' }).click()

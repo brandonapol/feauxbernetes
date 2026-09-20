@@ -10,8 +10,9 @@ import {
 } from './cluster'
 import type { Tab } from './events'
 import type { GitOpsEvent } from './gitops'
+import { applyEffect, openChannelState } from './story/effects'
 import { advanceStory, enterStep, skipStep } from './story/runner'
-import type { Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
+import type { BotCard, Channel, Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
 
 export const GAME_STATE_VERSION = 1
 
@@ -60,6 +61,8 @@ export interface FlackMessage {
   quickReplies?: QuickReply[]
   /** The quick reply the learner picked, once they have. */
   repliedWith?: string
+  /** A bot's structured attachment (a sync card, a page, a check run). See `BotCard`. */
+  card?: BotCard
 }
 
 export interface StoryState {
@@ -92,6 +95,9 @@ export interface GameState {
     /** Channel → number of messages seen. */
     readUpTo: Record<string, number>
     activeChannel?: string
+    /** Channels that don't live in content, e.g. the `#inc-<n>-<slug>` channel `declareIncident`
+     * (#31) creates via the `createChannel` effect. Shown in the sidebar after `config.channels`. */
+    dynamicChannels: Channel[]
   }
   ui: {
     activeTab: Tab
@@ -144,6 +150,10 @@ export type Action =
   | { type: 'setPlayerName'; name: string }
   | { type: 'openChannel'; channel: string }
   | { type: 'flackReply'; messageId: string; replyId: string }
+  /** Ask Kai: post the question and Kai's `MentorEntry` answer to `config.mentor`'s DM. A
+   * `questionId` `config.mentor` doesn't have an entry for is a no-op besides the event, so a
+   * missing/removed FAQ entry never crashes the reducer. */
+  | { type: 'askMentor'; questionId: string }
   | { type: 'applyEffect'; effect: Effect }
   | { type: 'showHint' }
   | { type: 'revealSolution' }
@@ -199,6 +209,7 @@ export function blankState(config: GameConfig): GameState {
       readUpTo: {},
       activeChannel:
         config.defaultChannel ?? config.channels.find((channel) => channel.kind === 'channel')?.id,
+      dynamicChannels: [],
     },
     ui: { activeTab: 'flack', unlockedTabs: ['flack'] },
     story: {
@@ -311,18 +322,10 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
     case 'setPlayerName':
       return advanceStory(config, state, [{ type: 'playerNamed', name: action.name }])
 
-    case 'openChannel': {
-      const count = state.flack.messages.filter((m) => m.channel === action.channel).length
-      const next: GameState = {
-        ...state,
-        flack: {
-          ...state.flack,
-          activeChannel: action.channel,
-          readUpTo: { ...state.flack.readUpTo, [action.channel]: count },
-        },
-      }
-      return advanceStory(config, next, [{ type: 'channelOpened', channel: action.channel }])
-    }
+    case 'openChannel':
+      return advanceStory(config, openChannelState(state, action.channel), [
+        { type: 'channelOpened', channel: action.channel },
+      ])
 
     case 'flackReply': {
       const message = state.flack.messages.find((m) => m.id === action.messageId)
@@ -349,6 +352,35 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
       }
       return advanceStory(config, next, [
         { type: 'flackReply', messageId: message.id, replyId: reply.id },
+      ])
+    }
+
+    case 'askMentor': {
+      const mentor = config.mentor
+      const entry = mentor?.entries[action.questionId]
+      if (!mentor || !entry) {
+        return advanceStory(config, state, [
+          { type: 'mentorQuestionAsked', questionId: action.questionId },
+        ])
+      }
+      // The docs link is appended here, not stored on the entry, so `MentorEntry.answer` alone is
+      // what the content style guide's 120-word cap measures (see `MentorEntry`).
+      const asked = applyEffect(config, state, {
+        type: 'flackMessage',
+        channel: mentor.channel,
+        from: 'player',
+        text: entry.question,
+      })
+      const answered = applyEffect(config, asked.state, {
+        type: 'flackMessage',
+        channel: mentor.channel,
+        from: mentor.characterId,
+        text: `${entry.answer}\n\nMore: [${entry.docs.label}](${entry.docs.href})`,
+      })
+      return advanceStory(config, answered.state, [
+        ...asked.events,
+        ...answered.events,
+        { type: 'mentorQuestionAsked', questionId: action.questionId },
       ])
     }
 
