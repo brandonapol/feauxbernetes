@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { useGame } from '../../store'
+import { OrderForm } from '../order-form/OrderForm'
 import { useRestoreFocus } from '../shared/useRestoreFocus'
 import styles from './OverlayHost.module.css'
 import { useFocusTrap } from './useFocusTrap'
@@ -58,12 +59,18 @@ export function OverlayHost() {
             Close
           </button>
         </div>
-        <p className={styles.body}>{bodyFor(overlay)}</p>
-        <div className={styles.footer}>
-          <button type="button" className={styles.primary} onClick={close}>
-            Got it
-          </button>
-        </div>
+        {overlay === 'order-form' ? (
+          <OrderForm />
+        ) : (
+          <>
+            <p className={styles.body}>{bodyFor(overlay)}</p>
+            <div className={styles.footer}>
+              <button type="button" className={styles.primary} onClick={close}>
+                Got it
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

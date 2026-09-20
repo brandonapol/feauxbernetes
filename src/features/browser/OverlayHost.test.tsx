@@ -13,7 +13,7 @@ function Harness() {
     <>
       <button
         type="button"
-        onClick={() => dispatch({ type: 'openOverlay', overlay: 'order-form' })}
+        onClick={() => dispatch({ type: 'openOverlay', overlay: 'test-builder' })}
       >
         Open the order form
       </button>
@@ -45,9 +45,9 @@ describe('OverlayHost', () => {
     trigger.focus()
     await user.click(trigger)
 
-    const dialog = await screen.findByRole('dialog', { name: 'Order form' })
+    const dialog = await screen.findByRole('dialog', { name: 'Test builder' })
     expect(dialog).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Order form' })).toHaveFocus()
+    expect(screen.getByRole('heading', { name: 'Test builder' })).toHaveFocus()
 
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
