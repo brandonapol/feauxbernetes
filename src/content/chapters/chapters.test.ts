@@ -50,6 +50,15 @@ describe('chapters', () => {
     expect(state.gitops.deployRepo.wishes.web?.version).toBe('2.0')
   })
 
+  it('Ch 5 golden path', () => {
+    const { state, trace } = playChapter(config, '05-ci')
+    expect(state.story.phase).toBe('complete')
+    expect(trace).toContain('run-e2e')
+    expect(trace).toContain('suggest-fix')
+    expect(trace).toContain('merge-fix')
+    expect(state.gitops.pullRequests[0].status).toBe('merged')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)

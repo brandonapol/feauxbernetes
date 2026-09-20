@@ -628,8 +628,11 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
       ])
     }
 
-    case 'runJob':
-      return runPipelineJob(config, state, action.pipelineId, action.jobId)
+    case 'runJob': {
+      const resolved = resolveJob(state, action.pipelineId, action.jobId)
+      if (!resolved) return { state: previous, effects: [] }
+      return runPipelineJob(config, state, resolved.pipelineId, resolved.jobId)
+    }
 
     case 'revertPR': {
       try {
@@ -685,6 +688,25 @@ function resolveCopyId(state: GameState, copyId: string): string | undefined {
 function resolvePrId(state: GameState, prId: string): string | undefined {
   if (prId !== 'latest') return prId
   return state.gitops.pullRequests.at(-1)?.id
+}
+
+/** `pipelineId: 'latest'` and `jobId: 'e2e'` let chapter solutions name a job without generated ids. */
+function resolveJob(
+  state: GameState,
+  pipelineId: string,
+  jobId: string
+): { pipelineId: string; jobId: string } | undefined {
+  const pipeline =
+    pipelineId === 'latest'
+      ? Object.values(state.ci.pipelines).at(-1)
+      : state.ci.pipelines[pipelineId]
+  if (!pipeline) return undefined
+  const job =
+    jobId === 'e2e'
+      ? pipeline.stages.find((stage) => stage.name === 'End-to-end tests')?.jobs[0]
+      : pipeline.stages.flatMap((stage) => stage.jobs).find((candidate) => candidate.id === jobId)
+  if (!job) return undefined
+  return { pipelineId: pipeline.id, jobId: job.id }
 }
 
 function pushCiNotice(state: GameState, raw: string, english: string): GameState {
@@ -821,7 +843,9 @@ function suggestFix(
   state: GameState,
   action: Extract<Action, { type: 'suggestFix' }>
 ): ReduceResult {
-  const pr = findPullRequest(state.gitops, action.prId)
+  const prId = resolvePrId(state, action.prId)
+  if (!prId) return { state, effects: [] }
+  const pr = findPullRequest(state.gitops, prId)
   if (!pr) return { state, effects: [] }
   const pipeline = pipelineForPR(state.ci, pr.id)
 
