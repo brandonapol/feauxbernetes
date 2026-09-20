@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { currentStep } from '../../engine/story'
 import type { WishOption } from '../../engine/story/types'
 import { useDispatch, useGame } from '../../store'
+import { targetIdFor } from '../instructions/showMe'
 import styles from './WishPanel.module.css'
 
 /** Renders `` `backtick` `` spans as `<code>`, the same convention step body text uses. */
@@ -47,8 +48,12 @@ function WishCard({
   onMakeItSo: () => void
 }) {
   const inputId = `ops-console-wish-${option.id}`
+  // "Show me" finds this card by the action it would dispatch (`wish:<app>`, `copy:<id>`,
+  // `box:<id>`). The attribute lives on the card — not only on "Make it so" — so the target is
+  // still in the DOM before the learner has selected it. See #57 and `showMe.ts`.
+  const target = option.action ? targetIdFor(option.action) : undefined
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-target={target}>
       <label className={styles.cardLabel} htmlFor={inputId}>
         <input
           type="radio"

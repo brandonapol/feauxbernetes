@@ -63,6 +63,7 @@ export function BrowserTabs() {
             title={locked ? "You'll unlock this later in the story" : undefined}
             className={styles.tab}
             data-tab={tab.id}
+            data-target={`tab:${tab.id}`}
             onClick={() => open(tab.id)}
           >
             {locked && (

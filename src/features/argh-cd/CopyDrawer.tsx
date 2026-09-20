@@ -98,7 +98,12 @@ export function CopyDrawer({
         )}
 
         {canUnplug && (
-          <button type="button" className={styles.unplug} onClick={onUnplug}>
+          <button
+            type="button"
+            className={styles.unplug}
+            data-target={`copy:${copy.id}`}
+            onClick={onUnplug}
+          >
             Unplug this copy
           </button>
         )}

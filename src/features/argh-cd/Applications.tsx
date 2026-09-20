@@ -44,7 +44,11 @@ export function Applications() {
 
 function AppTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterState }) {
   return (
-    <Link to={`/argh-cd/app/${service.id}`} className={styles.tile}>
+    <Link
+      to={`/argh-cd/app/${service.id}`}
+      className={styles.tile}
+      data-target={`app:${service.id}`}
+    >
       <h2 className={styles.tileName}>{service.name}</h2>
       <p className={styles.tileDescription}>{service.description}</p>
       <HealthBadge health={health(cluster, service.id)} />
@@ -57,7 +61,7 @@ function AppTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterS
 function DatabaseTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterState }) {
   const { database } = cluster
   return (
-    <Link to="/argh-cd/database" className={styles.tile}>
+    <Link to="/argh-cd/database" className={styles.tile} data-target="database">
       <h2 className={styles.tileName}>
         <span aria-hidden="true">🐉</span> {service.name}
       </h2>

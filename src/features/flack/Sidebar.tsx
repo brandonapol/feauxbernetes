@@ -36,6 +36,7 @@ export function Sidebar({
                   className={styles.channelButton}
                   aria-current={channel.id === current ? 'true' : undefined}
                   data-unread={unread > 0 ? 'true' : undefined}
+                  data-target={`channel:${channel.id}`}
                   onClick={() => onOpen(channel.id)}
                 >
                   {kind === 'channel' ? (

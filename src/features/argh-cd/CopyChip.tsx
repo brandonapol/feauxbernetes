@@ -63,6 +63,7 @@ export function CopyChip({
       className={styles.chip}
       data-state={copy.state}
       data-selected={selected || undefined}
+      data-target={`copy:${copy.id}`}
       aria-label={`${copy.app} copy ${ordinal}, ${display.label}, on ${boxName}`}
       onClick={onSelect}
     >

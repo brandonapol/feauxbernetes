@@ -79,7 +79,10 @@ describe('AppView', () => {
     })
 
     click(screen.getAllByRole('button', { name: /^search copy/ })[0])
-    click(screen.getByRole('button', { name: 'Unplug this copy' }))
+    const unplug = screen.getByRole('button', { name: 'Unplug this copy' })
+    expect(unplug).toHaveAttribute('data-target')
+    expect(unplug.getAttribute('data-target')).toMatch(/^copy:/)
+    click(unplug)
 
     // Driven purely by cluster state: wants 3 · has 2, then a replacement brings it back to 3.
     expect(screen.getByText('wants 3 · has 2')).toBeInTheDocument()

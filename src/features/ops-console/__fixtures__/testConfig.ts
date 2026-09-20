@@ -14,6 +14,32 @@ export const SCALE_SEARCH: WishOption = {
   action: { type: 'chooseWish', app: 'search', version: '1.4', copies: 5 },
 }
 
+/** Unplug a specific copy — "Show me" should land on `copy:<copyId>` (#57). */
+export const UNPLUG_SEARCH: WishOption = {
+  id: 'unplug-search',
+  label: 'Unplug one copy of `search` (pretend it crashed)',
+  kubectl: [
+    {
+      code: 'kubectl delete pod search-1 --force',
+      note: 'Pretends this copy crashed. A replacement will appear on its own.',
+    },
+  ],
+  action: { type: 'unplugCopy', copyId: 'search-1' },
+}
+
+/** Turn a box off — "Show me" should land on `box:<boxId>` (#57). */
+export const TURN_OFF_BOX_B: WishOption = {
+  id: 'turn-off-box-b',
+  label: 'Turn off box B (pretend the machine died)',
+  kubectl: [
+    {
+      code: 'kubectl drain box-b --ignore-daemonsets',
+      note: 'Takes the box out of service. Copies on it move to other boxes.',
+    },
+  ],
+  action: { type: 'setBox', boxId: 'box-b', on: false },
+}
+
 /** A deliberately wrong wish: picking it never dispatches anything to the cluster. */
 export const DELETE_EVERYTHING: WishOption = {
   id: 'delete-everything',
