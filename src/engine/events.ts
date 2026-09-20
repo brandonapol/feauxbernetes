@@ -1,4 +1,5 @@
 import type { ClusterEvent } from './cluster'
+import type { StatusUpdate } from './game'
 
 /** The fake browser's tabs. Locked ones can't be switched to (see `story/effects.ts`). */
 export type Tab = 'flack' | 'gitnub' | 'arghcd' | 'grafauxna' | 'pagerdoody' | 'inkwell'
@@ -36,3 +37,5 @@ export type GameEvent =
   | { type: 'copyCrashed'; copyId: string }
   /** One raw event out of a `tick`'s reconcile pass. Steps can gate on `event.event.kind`. */
   | { type: 'clusterEvent'; event: ClusterEvent }
+  /** A status.inkwell.example update was posted (see `postStatusUpdate`, #17 and #31). */
+  | { type: 'statusUpdatePosted'; update: StatusUpdate }

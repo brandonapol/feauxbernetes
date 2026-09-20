@@ -13,7 +13,9 @@ import type { GitOpsEvent } from './gitops'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
 
-export const GAME_STATE_VERSION = 1
+// Bumped for #17: GameState grew a `statusPage` slot. No migration is worth writing this early —
+// an old save just gets discarded (see `store/persistence.ts` → `migrate`) and the game restarts.
+export const GAME_STATE_VERSION = 2
 
 /**
  * Placeholder engine state slots.
@@ -60,6 +62,35 @@ export interface FlackMessage {
   quickReplies?: QuickReply[]
   /** The quick reply the learner picked, once they have. */
   repliedWith?: string
+}
+
+/**
+ * status.inkwell.example's three components — customer-facing names for `web`, `search` and
+ * `billing`. See planning.md → "inkwell.example" and #17.
+ */
+export type StatusComponentId = 'website' | 'search' | 'checkout'
+
+export type StatusComponentState = 'operational' | 'degraded' | 'outage'
+
+/**
+ * One post to the status page, oldest first in `StatusPageState.updates`. The incident engine
+ * (#31) is the intended writer, via `postStatusUpdate` below — this ticket (#17) only defines the
+ * shape and renders whatever's here, since #31 doesn't exist yet. A component's badge on the
+ * status page is the `state` of its most recent update, or `'operational'` (derived from cluster
+ * health instead) before the first one ever lands — see `src/features/inkwell/site.ts`.
+ */
+export interface StatusUpdate {
+  id: string
+  /** Fake-clock time this was posted, for the feed's ordering and timestamps. */
+  at: number
+  component: StatusComponentId
+  state: StatusComponentState
+  /** Customer-facing prose, e.g. "We've identified the issue and are rolling out a fix." */
+  message: string
+}
+
+export interface StatusPageState {
+  updates: StatusUpdate[]
 }
 
 export interface StoryState {
@@ -117,6 +148,8 @@ export interface GameState {
   gitopsEvents: GitOpsEvent[]
   /** CI notices for the Ops Console's "Checks" feed category (#13). See `CiNotice` above. */
   ciNotices: CiNotice[]
+  /** status.inkwell.example's incident feed. See `StatusUpdate` and #31. */
+  statusPage: StatusPageState
   gitops: GitOpsState
   ci: CiState
   telemetry: TelemetryState
@@ -166,6 +199,16 @@ export type Action =
   | { type: 'setBox'; boxId: string; on: boolean }
   /** A scripted scenario crashes a copy in place; `reconcile` restarts it. */
   | { type: 'crashCopy'; copyId: string }
+  /**
+   * Posts an update to status.inkwell.example. This is the incident engine's (#31) interface onto
+   * the status page; #17 dispatches it only in tests, to render the feed against fixture data.
+   */
+  | {
+      type: 'postStatusUpdate'
+      component: StatusComponentId
+      state: StatusComponentState
+      message: string
+    }
 
 export interface ReduceResult {
   state: GameState
@@ -217,6 +260,7 @@ export function blankState(config: GameConfig): GameState {
     clusterEvents: [],
     gitopsEvents: [],
     ciNotices: [],
+    statusPage: { updates: [] },
     gitops: {},
     ci: {},
     telemetry: {},
@@ -416,6 +460,20 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
       const cluster = crashClusterCopy(state.cluster, action.copyId, state.clock.now)
       return advanceStory(config, { ...state, cluster }, [
         { type: 'copyCrashed', copyId: action.copyId },
+      ])
+    }
+
+    case 'postStatusUpdate': {
+      const update: StatusUpdate = {
+        id: `status-${state.statusPage.updates.length + 1}`,
+        at: state.clock.now,
+        component: action.component,
+        state: action.state,
+        message: action.message,
+      }
+      const statusPage: StatusPageState = { updates: [...state.statusPage.updates, update] }
+      return advanceStory(config, { ...state, statusPage }, [
+        { type: 'statusUpdatePosted', update },
       ])
     }
   }

@@ -1,0 +1,169 @@
+.site {
+  --ink-accent: #6d4aff;
+  --ink-ink: #1c1730;
+  --ink-paper: #fbfaff;
+  --ink-muted: #6b6480;
+  --ink-border: #e4e0f5;
+
+  min-height: 100%;
+  background: var(--ink-paper);
+  color: var(--ink-ink);
+  font-family: system-ui, sans-serif;
+}
+
+.header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--ink-border);
+}
+
+.header a {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.header h1 {
+  font-family: Georgia, serif;
+  margin: 6px 0 0;
+}
+
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 24px 56px;
+}
+
+.overall {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.overall.operational {
+  background: #eafaf0;
+  color: #217a3a;
+}
+
+.overall.degraded {
+  background: #fff6e0;
+  color: #92650c;
+}
+
+.overall.outage {
+  background: #fdecec;
+  color: #9b2c2c;
+}
+
+.components {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+  border: 1px solid var(--ink-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.component {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+.component + .component {
+  border-top: 1px solid var(--ink-border);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.badge.operational {
+  background: #eafaf0;
+  color: #217a3a;
+}
+
+.badge.operational .dot {
+  background: #217a3a;
+}
+
+.badge.degraded {
+  background: #fff6e0;
+  color: #92650c;
+}
+
+.badge.degraded .dot {
+  background: #92650c;
+}
+
+.badge.outage {
+  background: #fdecec;
+  color: #9b2c2c;
+}
+
+.badge.outage .dot {
+  background: #9b2c2c;
+}
+
+.feedTitle {
+  font-size: 0.95rem;
+  margin: 0 0 12px;
+}
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.update {
+  padding: 14px 0;
+  border-top: 1px solid var(--ink-border);
+}
+
+.update:first-child {
+  border-top: none;
+}
+
+.updateHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+.updateComponent {
+  font-weight: 700;
+}
+
+.updateTime {
+  color: var(--ink-muted);
+}
+
+.updateMessage {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.empty {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}

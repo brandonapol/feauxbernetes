@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router'
+
 import { useGame } from '../../store'
 import styles from './AddressBar.module.css'
 import { TABS } from './tabs'
@@ -9,8 +11,10 @@ import { useBrowserHistory } from './useBrowserHistory'
  */
 export function AddressBar() {
   const activeTab = useGame((s) => s.game.ui.activeTab)
+  const location = useLocation()
   const { canGoBack, canGoForward, back, forward } = useBrowserHistory()
-  const address = TABS.find((tab) => tab.id === activeTab)?.address ?? ''
+  const tab = TABS.find((info) => info.id === activeTab)
+  const address = tab?.addressForPath?.(location.pathname) ?? tab?.address ?? ''
 
   return (
     <div className={styles.bar}>
