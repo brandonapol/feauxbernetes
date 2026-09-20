@@ -9,6 +9,7 @@ import {
   type ClusterState,
 } from './cluster'
 import type { Tab } from './events'
+import type { GitOpsEvent } from './gitops'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
 
@@ -34,6 +35,20 @@ type TelemetryState = Record<string, never>
 type TestLabState = Record<string, never>
 // TODO(#31): swap for the incident engine's real state (timeline, roles, scorecard).
 type IncidentState = Record<string, never>
+
+/**
+ * A plain-English one-liner for the Ops Console's "Checks" feed category (#13), matching the
+ * `{ raw, english }` shape `engine/cluster/events.ts` and `engine/gitops/events.ts` already use.
+ * The CI engine (#8) doesn't produce an event stream yet — it renders a whole report on demand
+ * instead — so `GameState.ciNotices` is a stub nobody populates yet. Whichever future ticket wires
+ * CI into the game loop (a pipeline finishing, checks passing/failing on a PR) should push entries
+ * here, the same way `tick` below pushes `clusterEvents`.
+ */
+export interface CiNotice {
+  at: number
+  raw: string
+  english: string
+}
 
 export interface FlackMessage {
   id: string
@@ -84,11 +99,24 @@ export interface GameState {
     toast?: string
     /** The one overlay open over the browser column (Order Form, Test Builder, the page), if any. */
     overlay?: string
+    /**
+     * From Ch 4 on (planning.md → "Argh CD, part 2"): wishes made directly in the Ops Console get
+     * undone by Argh CD, because GitNub is the source of truth. A chapter turns this on for good
+     * by having its `setup` return `{ ...state, ui: { ...state.ui, gitOpsEnforced: true } }`; no
+     * chapter ever needs to turn it back off. The Ops Console reads it to show the "Changes here
+     * are temporary" banner (#13).
+     */
+    gitOpsEnforced?: boolean
   }
   story: StoryState
   cluster: ClusterState
   /** Cluster events from `reconcile`, oldest first, for the Ops Console (#13) feed. */
   clusterEvents: ClusterEvent[]
+  /** GitOps events for the Ops Console's "Deploys" feed category (#13). See `CiNotice` above for
+   * why this is empty until GitOps is wired into `tick` (#14/#16). */
+  gitopsEvents: GitOpsEvent[]
+  /** CI notices for the Ops Console's "Checks" feed category (#13). See `CiNotice` above. */
+  ciNotices: CiNotice[]
   gitops: GitOpsState
   ci: CiState
   telemetry: TelemetryState
@@ -187,6 +215,8 @@ export function blankState(config: GameConfig): GameState {
     },
     cluster: blankCluster(),
     clusterEvents: [],
+    gitopsEvents: [],
+    ciNotices: [],
     gitops: {},
     ci: {},
     telemetry: {},

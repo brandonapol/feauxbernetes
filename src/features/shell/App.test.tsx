@@ -43,13 +43,15 @@ describe('App shell', () => {
     )
   })
 
-  it('shows the Instructions and Ops Console placeholders', () => {
+  it('shows the Instructions placeholder and the Ops Console empty state', () => {
     renderApp()
     expect(
       screen.getByRole('complementary', { name: 'Instructions' }).querySelector('h2')
     ).toHaveTextContent('Instructions')
-    expect(
-      screen.getByRole('region', { name: 'Ops Console' }).querySelector('h2')
-    ).toHaveTextContent('Ops Console')
+    // The placeholder chapter (#3) has no wishOptions on its one step, so #13's real Ops Console
+    // shows its empty state — see `ops-console/WishPanel.tsx`.
+    expect(screen.getByRole('region', { name: 'Ops Console' })).toHaveTextContent(
+      'Nothing to do here right now. Watch the feed.'
+    )
   })
 })
