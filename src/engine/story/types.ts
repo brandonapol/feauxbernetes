@@ -132,6 +132,18 @@ export interface WishOption {
   veto?: KaiResponse
 }
 
+/**
+ * One radio card for a `chooseOption` step whose choice is rendered in the Instructions panel
+ * (#11) — a plain multiple-choice quiz, distinct from the Ops Console's `WishOption` above: a
+ * `chooseOption` goal dispatches `chooseOption`/checks `wrongAnswers`, where a wish dispatches a
+ * cluster action directly and never goes through `chooseOption` at all.
+ */
+export interface ChooseOptionChoice {
+  id: string
+  /** Markdown, like `body`. */
+  label: string
+}
+
 export interface Step {
   id: string
   /** Checklist label. */
@@ -143,7 +155,10 @@ export interface Step {
   hints: string[]
   /**
    * The action that satisfies this step's goal. Used by "Show me" (to know what to highlight) and
-   * by the golden-path harness, which plays it to advance without a learner.
+   * by the golden-path harness, which plays it to advance without a learner. "Show me" finds the
+   * element to highlight by its `data-target` attribute; see `src/features/instructions/showMe.ts`
+   * for the full action→`data-target` mapping every panel that owns a clickable goal (Ops Console
+   * #13, GitNub #15, Argh CD #14/#16, Flack #12) needs to follow.
    */
   solution?: Action
   /** "What just happened", shown after the step completes. */
@@ -176,6 +191,15 @@ export interface Step {
    * means the console shows its empty state ("Nothing to do here right now. Watch the feed.").
    */
   wishOptions?: WishOption[]
+  /**
+   * For a `chooseOption` step whose choice belongs in the Instructions panel: the radio cards to
+   * render, in order (see planning.md → "Multiple-choice rendering"). Omit when the choice lives
+   * elsewhere (an app in the browser column) and the panel just points at it instead. A picked
+   * option dispatches `chooseOption`; a wrong one's response comes from `wrongAnswers`, shown
+   * inline via `GameState.story.lastWrongAnswer`. Unlike `wishOptions`, this is a plain quiz —
+   * not a cluster action — so it's the Instructions panel that renders it, not the Ops Console.
+   */
+  options?: ChooseOptionChoice[]
 }
 
 export interface Reaction {
