@@ -8,8 +8,9 @@ import {
   type ClusterEvent,
   type ClusterState,
 } from './cluster'
+import { createCiState, type CiState } from './ci'
 import type { Tab } from './events'
-import type { GitOpsEvent } from './gitops'
+import { createGitOps, type GitOpsEvent, type GitOpsState } from './gitops'
 import { applyEffect, openChannelState } from './story/effects'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { BotCard, Channel, Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
@@ -21,17 +22,16 @@ export const GAME_STATE_VERSION = 2
 /**
  * Placeholder engine state slots.
  *
- * `gitops`, `ci`, `telemetry`, `testlab` and `incident` are being built in parallel (tickets #7,
- * #8, #9, #30, #31). Until each lands, its slot on `GameState` is this empty shape. Swapping a
- * slot for the real thing is a one-line change in this file: replace the
- * `type X = Record<string, never>` below with `import type { XState as X } from './x'`, and give
- * `blankState` its real initial value. `cluster` (#6) was the first to be wired in, in #4, since
- * the reconcile loop runs on the clock the store owns.
+ * `telemetry`, `testlab` and `incident` are being built in parallel (tickets #9, #30, #31). Until
+ * each lands, its slot on `GameState` is this empty shape. Swapping a slot for the real thing is a
+ * one-line change in this file: replace the `type X = Record<string, never>` below with
+ * `import type { XState as X } from './x'`, and give `blankState` its real initial value.
+ * `cluster` (#6) was the first to be wired in, in #4, since the reconcile loop runs on the clock
+ * the store owns; `gitops` (#7) and `ci` (#8) followed in #11, so the "Where is my change?" strip
+ * has real state to read (see `src/features/instructions/whereIsMyChange.ts`). Neither grows a
+ * `reduce` case or a clock-driven tick yet — no chapter creates a pull request until #15/#16 add
+ * the actions (`openPR`, `mergePR`, `runJob`, `sync`, …) that do.
  */
-// TODO(#7): swap for the GitOps engine's real state (config repo, app repos, Argh CD apps).
-type GitOpsState = Record<string, never>
-// TODO(#8): swap for the CI engine's real state (pipelines, jobs, test reports).
-type CiState = Record<string, never>
 // TODO(#9): swap for the telemetry engine's real state (series, logs, SLOs, alert rules).
 type TelemetryState = Record<string, never>
 // TODO(#30): swap for the test lab engine's real state (test steps, the fake app model).
@@ -242,6 +242,11 @@ function blankCluster(): ClusterState {
   })
 }
 
+/** A GitOps world with no commits and no pull requests yet. Real content (#15+) seeds its own. */
+function blankGitOps(): GitOpsState {
+  return createGitOps({ config: { autoSyncDelayMs: 4000, selfHealDelayMs: 6000 } })
+}
+
 export function blankState(config: GameConfig): GameState {
   return {
     version: GAME_STATE_VERSION,
@@ -272,8 +277,8 @@ export function blankState(config: GameConfig): GameState {
     gitopsEvents: [],
     ciNotices: [],
     statusPage: { updates: [] },
-    gitops: {},
-    ci: {},
+    gitops: blankGitOps(),
+    ci: createCiState(),
     telemetry: {},
     testlab: {},
     incident: {},

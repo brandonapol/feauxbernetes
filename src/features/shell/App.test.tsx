@@ -43,13 +43,16 @@ describe('App shell', () => {
     )
   })
 
-  it('shows the Instructions placeholder and the Ops Console empty state', () => {
+  it('renders the real Instructions panel and the Ops Console empty state', () => {
     renderApp()
+    // #11 replaced the Instructions placeholder, and #13 replaced the Ops Console's. The
+    // placeholder chapter (`src/content/chapters`) completes as soon as it's entered, so
+    // Instructions shows the "Chapter complete" card rather than a step, and its one step has no
+    // `wishOptions`, so the real Ops Console shows its empty state (`ops-console/WishPanel.tsx`).
     expect(
-      screen.getByRole('complementary', { name: 'Instructions' }).querySelector('h2')
-    ).toHaveTextContent('Instructions')
-    // The placeholder chapter (#3) has no wishOptions on its one step, so #13's real Ops Console
-    // shows its empty state — see `ops-console/WishPanel.tsx`.
+      screen.getByRole('complementary', { name: 'Instructions' }).querySelector('h1')
+    ).toHaveTextContent('Placeholder')
+    expect(screen.getByRole('region', { name: 'Chapter complete' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Ops Console' })).toHaveTextContent(
       'Nothing to do here right now. Watch the feed.'
     )

@@ -1,0 +1,87 @@
+.panel {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.stage[data-state='current'] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.stage[data-state='done'] {
+  color: var(--text-muted);
+}
+
+.stage[data-state='failed'] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.stageMark {
+  width: 14px;
+  flex: none;
+  text-align: center;
+}
+
+.stage[data-state='done'] .stageMark {
+  color: var(--success);
+}
+
+.stage[data-state='current'] .stageMark {
+  color: var(--accent);
+}
+
+.stage[data-state='failed'] .stageMark {
+  color: var(--danger);
+}
+
+.stageDetail {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
