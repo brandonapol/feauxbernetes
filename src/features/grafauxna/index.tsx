@@ -1,5 +1,6 @@
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
 
+import { useDispatch } from '../../store'
 import { Alerts } from './Alerts'
 import { Dashboard } from './Dashboard'
 import styles from './Grafauxna.module.css'
@@ -12,6 +13,7 @@ import { SloPanel } from './SloPanel'
  */
 export function Grafauxna() {
   const { pathname } = useLocation()
+  const dispatch = useDispatch()
   return (
     <div className={styles.grafauxna}>
       <header className={styles.header}>
@@ -23,6 +25,8 @@ export function Grafauxna() {
           <Link
             to="/grafauxna/logs"
             aria-current={pathname.startsWith('/grafauxna/logs') ? 'page' : undefined}
+            data-target="grafauxna-logs"
+            onClick={() => dispatch({ type: 'clickTarget', targetId: 'grafauxna-logs' })}
           >
             Logs
           </Link>
