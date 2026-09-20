@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { useGame } from '../../store'
 import { OrderForm } from '../order-form/OrderForm'
+import { PageOverlay } from '../pagerdoody/PageOverlay'
 import { useRestoreFocus } from '../shared/useRestoreFocus'
 import styles from './OverlayHost.module.css'
 import { useFocusTrap } from './useFocusTrap'
@@ -61,6 +62,8 @@ export function OverlayHost() {
         </div>
         {overlay === 'order-form' ? (
           <OrderForm />
+        ) : overlay === 'page' ? (
+          <PageOverlay />
         ) : (
           <>
             <p className={styles.body}>{bodyFor(overlay)}</p>
