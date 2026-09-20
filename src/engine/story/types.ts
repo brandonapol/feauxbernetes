@@ -47,6 +47,61 @@ export interface DocsLink {
   href: string
 }
 
+/**
+ * One line of a "In real life" reveal (Ops Console, #13): a single `kubectl` invocation or one
+ * line of a YAML snippet, plus the plain-English note under it. Read-only — the learner never
+ * edits or types these, they only read them.
+ */
+export interface AnnotatedLine {
+  code: string
+  /** Plain English, shown under the line. Omit for a line that doesn't need one (e.g. `---`). */
+  note?: string
+}
+
+/** What "Make it so" dispatches for a non-veto `WishOption`. Only the four cluster actions the
+ * Ops Console is allowed to raise directly — everything else goes through a story step instead. */
+export type WishAction = Extract<
+  Action,
+  { type: 'chooseWish' | 'unplugCopy' | 'setBox' | 'crashCopy' }
+>
+
+/** The before/after line shown once a wish is selected, e.g. "copies: 3 → 5". */
+export interface WishPreview {
+  /** The thing that's changing, e.g. "copies" or "version". */
+  label: string
+  from: string
+  to: string
+}
+
+/**
+ * One radio card in the Ops Console's "What do you want?" list (#13, planning.md → "The Ops
+ * Console"). Chapters provide these on the current step (`Step.wishOptions`); the Ops Console
+ * never invents its own wishes. Exactly one of `action`/`veto` should be set:
+ *
+ * - A real wish sets `action` (what "Make it so" dispatches) and usually `preview`. `veto` is
+ *   left unset.
+ * - A deliberately wrong or risky option (planning.md's "Delete everything and start over") sets
+ *   `veto` instead: its plain-English text is Kai's explanation for why not, shown in the console
+ *   and echoed as a Flack message from Kai. Selecting it never dispatches anything to the
+ *   cluster, so `action` should be left unset.
+ *
+ * See `src/features/ops-console/WishPanel.tsx` for how each field renders.
+ */
+export interface WishOption {
+  id: string
+  /** The radio card's label, e.g. "Keep `3` copies of `search` running". */
+  label: string
+  /** Shown once this card is selected. Omit for an option with nothing numeric to preview
+   * (e.g. "turn off box B"). */
+  preview?: WishPreview
+  /** The collapsed "In real life" disclosure's `kubectl` line(s), one entry per line. */
+  kubectl: AnnotatedLine[]
+  /** An optional YAML snippet shown alongside (or instead of) `kubectl`, same per-line shape. */
+  yaml?: AnnotatedLine[]
+  action?: WishAction
+  veto?: KaiResponse
+}
+
 export interface Step {
   id: string
   /** Checklist label. */
@@ -86,6 +141,11 @@ export interface Step {
    * these keys to know which wrong answers to try before the real one.
    */
   wrongAnswers?: Record<string, KaiResponse>
+  /**
+   * The Ops Console's "What do you want?" list while this step is current (#13). Absent or empty
+   * means the console shows its empty state ("Nothing to do here right now. Watch the feed.").
+   */
+  wishOptions?: WishOption[]
 }
 
 export interface Reaction {

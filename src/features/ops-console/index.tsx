@@ -1,16 +1,22 @@
-import { AppPlaceholder } from '../shared/AppPlaceholder'
+import { EventFeed } from './EventFeed'
+import { GitOpsBanner } from './GitOpsBanner'
+import styles from './OpsConsole.module.css'
+import { WishPanel } from './WishPanel'
 
 /**
- * Placeholder for the Ops Console column. The "What do you want?" wishes and the plain-English
- * cluster feed land in #13. #5 only needs a real slot here so the three-column layout is real;
- * #13 replaces this wholesale.
+ * The Ops Console (#13, planning.md → "The Ops Console"): Flack's terminal, reimagined for
+ * learners who never type. Two stacked parts — "What do you want?" (`WishPanel`, chapter-provided
+ * multiple-choice wishes) and "What's happening" (`EventFeed`, the plain-English cluster/GitOps/CI
+ * feed) — plus, from Ch 4 on, the `GitOpsBanner` reminding the learner that console changes don't
+ * stick. The `<section aria-label="Ops Console">` landmark lives in `shell/Layout.tsx` (#5); this
+ * component only owns what's inside it.
  */
 export function OpsConsole() {
   return (
-    <AppPlaceholder
-      title="Ops Console"
-      issue="#13"
-      note="Plain-English wishes ('Make it so') and the live cluster feed."
-    />
+    <div className={styles.opsConsole}>
+      <GitOpsBanner />
+      <WishPanel />
+      <EventFeed />
+    </div>
   )
 }

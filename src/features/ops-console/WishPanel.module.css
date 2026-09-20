@@ -1,0 +1,99 @@
+.panel {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.heading {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.card {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.cardLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.cardLabel input {
+  margin-top: 3px;
+}
+
+.cardDetails {
+  margin-top: 10px;
+  padding-left: 24px;
+}
+
+.preview {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text);
+}
+
+.realLife {
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+}
+
+.realLife summary {
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.codeLines {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.codeLines code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.codeNote {
+  margin: 2px 0 8px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.yamlLabel {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.makeItSo {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.kaiNote {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--chrome);
+  font-size: 0.8125rem;
+}

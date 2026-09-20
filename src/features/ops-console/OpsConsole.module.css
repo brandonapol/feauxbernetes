@@ -1,0 +1,24 @@
+.opsConsole {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.banner {
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--chrome);
+  font-size: 0.8125rem;
+}
+
+.bannerLink {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
