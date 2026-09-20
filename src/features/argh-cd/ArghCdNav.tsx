@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router'
 
+import { useDispatch } from '../../store'
 import styles from './ArghCdNav.module.css'
 
 /**
@@ -9,6 +10,7 @@ import styles from './ArghCdNav.module.css'
  */
 export function ArghCdNav() {
   const { pathname } = useLocation()
+  const dispatch = useDispatch()
   const onBoxes = pathname === '/argh-cd/boxes'
 
   return (
@@ -20,6 +22,7 @@ export function ArghCdNav() {
           className={styles.link}
           aria-current={onBoxes ? undefined : 'page'}
           data-target="arghcd-applications"
+          onClick={() => dispatch({ type: 'clickTarget', targetId: 'arghcd-applications' })}
         >
           Applications
         </Link>
@@ -28,6 +31,7 @@ export function ArghCdNav() {
           className={styles.link}
           aria-current={onBoxes ? 'page' : undefined}
           data-target="arghcd-boxes"
+          onClick={() => dispatch({ type: 'clickTarget', targetId: 'arghcd-boxes' })}
         >
           Boxes
         </Link>

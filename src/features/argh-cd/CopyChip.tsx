@@ -1,4 +1,5 @@
 import type { Copy } from '../../engine/cluster'
+import { useDispatch } from '../../store'
 import { COPY_STATE_DISPLAY } from './display'
 import styles from './CopyChip.module.css'
 
@@ -28,6 +29,7 @@ export function CopyChip({
   selected: boolean
   onSelect: () => void
 }) {
+  const dispatch = useDispatch()
   const display = COPY_STATE_DISPLAY[copy.state]
 
   const content = (
@@ -66,9 +68,12 @@ export function CopyChip({
       className={styles.chip}
       data-state={copy.state}
       data-selected={selected || undefined}
-      data-target={`copy:${copy.id}`}
+      data-target={`app-copy:${copy.app}`}
       aria-label={`${copy.app} copy ${ordinal}, ${display.label}, on ${boxName}`}
-      onClick={onSelect}
+      onClick={() => {
+        dispatch({ type: 'clickTarget', targetId: `app-copy:${copy.app}` })
+        onSelect()
+      }}
     >
       {content}
     </button>
