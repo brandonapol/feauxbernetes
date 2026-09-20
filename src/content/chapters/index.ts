@@ -3,5 +3,12 @@ import { welcomeChapter } from './00-welcome'
 import { boxesChapter } from './01-boxes'
 import { orderFormChapter } from './02-order-form'
 import { selfHealChapter } from './03-self-heal'
+import { gitopsChapter } from './04-gitops'
 
-export const CHAPTERS: Chapter[] = [welcomeChapter, boxesChapter, orderFormChapter, selfHealChapter]
+export const CHAPTERS: Chapter[] = [
+  welcomeChapter,
+  boxesChapter,
+  orderFormChapter,
+  selfHealChapter,
+  gitopsChapter,
+]

@@ -42,6 +42,14 @@ describe('chapters', () => {
     expect(state.cluster.boxes.find((box) => box.id === 'box-b')?.on).toBe(false)
   })
 
+  it('Ch 4 golden path', () => {
+    const { state, trace } = playChapter(config, '04-gitops')
+    expect(state.story.phase).toBe('complete')
+    expect(trace).toContain('propose-web')
+    expect(trace).toContain('merge-it')
+    expect(state.gitops.deployRepo.wishes.web?.version).toBe('2.0')
+  })
+
   it('?chapter=00 jump builds a starting world', () => {
     const { state } = playChapter(config, '00-welcome')
     expect(state.cluster.boxes.length).toBeGreaterThan(0)

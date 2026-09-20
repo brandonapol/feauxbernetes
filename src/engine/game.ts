@@ -595,15 +595,19 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
       return openPullRequest(config, state, action)
 
     case 'approvePR': {
-      const gitops = approveGitOpsPR(state.gitops, action.prId, action.reviewer)
+      const prId = resolvePrId(state, action.prId)
+      if (!prId) return { state: previous, effects: [] }
+      const gitops = approveGitOpsPR(state.gitops, prId, action.reviewer)
       return advanceStory(config, { ...state, gitops }, [
-        { type: 'prApproved', prId: action.prId, reviewer: action.reviewer },
+        { type: 'prApproved', prId, reviewer: action.reviewer },
       ])
     }
 
     case 'mergePR': {
+      const prId = resolvePrId(state, action.prId)
+      if (!prId) return { state: previous, effects: [] }
       try {
-        const { gitops, pullRequest } = mergeGitOpsPR(state.gitops, action.prId, state.clock.now)
+        const { gitops, pullRequest } = mergeGitOpsPR(state.gitops, prId, state.clock.now)
         return advanceStory(config, { ...state, gitops }, [
           { type: 'prMerged', prId: pullRequest.id },
         ])
@@ -675,6 +679,12 @@ function resolveCopyId(state: GameState, copyId: string): string | undefined {
   if (!copyId.startsWith('any:')) return copyId
   const app = copyId.slice(4)
   return state.cluster.copies.find((copy) => copy.app === app && copy.state === 'Running')?.id
+}
+
+/** Chapters can't know a generated PR id. `latest` means the most recently opened pull request. */
+function resolvePrId(state: GameState, prId: string): string | undefined {
+  if (prId !== 'latest') return prId
+  return state.gitops.pullRequests.at(-1)?.id
 }
 
 function pushCiNotice(state: GameState, raw: string, english: string): GameState {
