@@ -267,6 +267,23 @@
   border: none;
 }
 
+.nameForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  align-items: flex-start;
+}
+
+.nameForm input {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font: inherit;
+}
+
 .optionCard {
   display: flex;
   align-items: center;

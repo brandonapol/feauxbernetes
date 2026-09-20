@@ -8,8 +8,7 @@ import { WORLD_START } from './world'
 
 /**
  * Assembles the engine's `GameConfig` from `src/content`. `main.tsx` calls this once, at startup.
- * `chapters` is still a placeholder (see `chapters/index.ts`) until chapter content (#18 onward)
- * lands — everything else here is real.
+ * Assembles the engine's `GameConfig` from `src/content`. `main.tsx` calls this once, at startup.
  */
 export function createGameConfig(): GameConfig {
   return {
