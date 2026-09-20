@@ -1,11 +1,14 @@
 import { Link } from 'react-router'
 
 import { health, summary, type ClusterState } from '../../engine/cluster'
+import { appSyncStatus, type GitOpsState } from '../../engine/gitops'
 import { SERVICES, type ServiceInfo } from '../../content'
 import { useGame } from '../../store'
 import styles from './Applications.module.css'
 import { HealthBadge } from './HealthBadge'
+import { SyncBadge } from './SyncBadge'
 import { wantsHasText } from './display'
+import { upForText } from './duration'
 import { applicationsSummarySentence } from './summaries'
 
 /**
@@ -14,6 +17,8 @@ import { applicationsSummarySentence } from './summaries'
  */
 export function Applications() {
   const cluster = useGame((s) => s.game.cluster)
+  const gitops = useGame((s) => s.game.gitops)
+  const now = useGame((s) => s.game.clock.now)
   const apps = SERVICES.filter((service) => service.id !== 'database')
   const database = SERVICES.find((service) => service.id === 'database')
 
@@ -29,7 +34,7 @@ export function Applications() {
       <ul className={styles.tiles}>
         {apps.map((service) => (
           <li key={service.id}>
-            <AppTile service={service} cluster={cluster} />
+            <AppTile service={service} cluster={cluster} gitops={gitops} now={now} />
           </li>
         ))}
         {database && (
@@ -42,7 +47,20 @@ export function Applications() {
   )
 }
 
-function AppTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterState }) {
+function AppTile({
+  service,
+  cluster,
+  gitops,
+  now,
+}: {
+  service: ServiceInfo
+  cluster: ClusterState
+  gitops: GitOpsState
+  now: number
+}) {
+  const repoWish = gitops.deployRepo.wishes[service.id]
+  const running = cluster.wishes[service.id]
+  const last = gitops.apps[service.id]?.history.at(-1)
   return (
     <Link
       to={`/argh-cd/app/${service.id}`}
@@ -52,8 +70,14 @@ function AppTile({ service, cluster }: { service: ServiceInfo; cluster: ClusterS
       <h2 className={styles.tileName}>{service.name}</h2>
       <p className={styles.tileDescription}>{service.description}</p>
       <HealthBadge health={health(cluster, service.id)} />
+      <SyncBadge status={appSyncStatus(gitops, cluster, service.id)} />
       <p className={styles.wantsHas}>{wantsHasText(summary(cluster, service.id))}</p>
-      <p className={styles.tileVersion}>version {cluster.wishes[service.id]?.version ?? '—'}</p>
+      <p className={styles.tileVersion}>
+        {repoWish
+          ? `GitNub asks for ${repoWish.version} · running ${running?.version ?? '—'}`
+          : `version ${running?.version ?? '—'}`}
+      </p>
+      {last && <p className={styles.tileVersion}>Last sync {upForText(last.at, now)} ago</p>}
     </Link>
   )
 }

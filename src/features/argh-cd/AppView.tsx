@@ -2,16 +2,20 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
 
 import { health, summary } from '../../engine/cluster'
+import { appSyncStatus } from '../../engine/gitops'
 import { SERVICES } from '../../content'
 import { useGame } from '../../store'
 import styles from './AppView.module.css'
 import { CopyChip } from './CopyChip'
 import { copyLogLines } from './logLines'
 import { CopyDrawer } from './CopyDrawer'
+import { DeployCaption } from './DeployCaption'
 import { wantsHasText } from './display'
 import { ordinalFor } from './copyLabel'
 import { groupByBox } from './groupByBox'
 import { HealthBadge } from './HealthBadge'
+import { HistoryPanel } from './HistoryPanel'
+import { SyncBadge } from './SyncBadge'
 import { appSummarySentence } from './summaries'
 import { useAnimatedCopies } from './useAnimatedCopies'
 
@@ -24,6 +28,7 @@ export function AppView() {
   const { app = '' } = useParams()
   const service = SERVICES.find((candidate) => candidate.id === app && candidate.id !== 'database')
   const cluster = useGame((s) => s.game.cluster)
+  const gitops = useGame((s) => s.game.gitops)
   const now = useGame((s) => s.game.clock.now)
   const clusterEvents = useGame((s) => s.game.clusterEvents)
   const canUnplug = useGame((s) => s.game.ui.canUnplugCopies)
@@ -48,8 +53,15 @@ export function AppView() {
       </p>
       <h1 className={styles.heading}>{service.name}</h1>
       <HealthBadge health={health(cluster, app)} />
+      <SyncBadge status={appSyncStatus(gitops, cluster, app)} />
       <p className={styles.wantsHas}>{wantsHasText(summary(cluster, app))}</p>
       <p className={styles.summary}>{appSummarySentence(app, appCopies, cluster.boxes)}</p>
+      <HistoryPanel app={app} />
+      <DeployCaption
+        copies={appCopies}
+        wishedVersion={cluster.wishes[app]?.version}
+        wishedCopies={cluster.wishes[app]?.copies ?? 0}
+      />
 
       {groups.map(({ box, entries: boxEntries }) => (
         <section key={box.id} className={styles.boxGroup}>

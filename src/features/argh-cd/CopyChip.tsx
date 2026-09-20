@@ -39,6 +39,9 @@ export function CopyChip({
         <span aria-hidden="true" className={styles.label}>
           {visibleLabel}
         </span>
+        <span aria-hidden="true" className={styles.version}>
+          {copy.version}
+        </span>
       </span>
       <span aria-hidden="true" className={styles.state}>
         {display.label}
