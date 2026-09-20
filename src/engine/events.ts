@@ -22,8 +22,13 @@ export type GameEvent =
   | { type: 'overlayOpened'; overlay: string }
   | { type: 'overlayClosed' }
   | { type: 'channelOpened'; channel: string }
+  /** A new Flack channel appeared, e.g. the `#inc-<n>-<slug>` channel `declareIncident` (#31)
+   * creates. */
+  | { type: 'channelCreated'; channelId: string }
   | { type: 'flackReply'; messageId: string; replyId: string }
   | { type: 'flackMessage'; messageId: string; channel: string; from: string }
+  /** The learner asked Kai one of Ask Kai's FAQ questions. */
+  | { type: 'mentorQuestionAsked'; questionId: string }
   /** The one thing besides search the learner ever types: their name. */
   | { type: 'playerNamed'; name: string }
   /** The learner picked a wish from the Ops Console (see cluster #6). */

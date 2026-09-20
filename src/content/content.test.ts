@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Chapter } from '../engine/story/types'
+import { CHANNELS, incidentChannel, incidentChannelId } from './channels'
 import { characters } from './characters'
 import { ALLOWED_DOCS_HOSTS, DOCS } from './docsLinks'
 import { findGlossaryEntry, GLOSSARY } from './glossary'
+import { GENERAL_QUESTIONS, MENTOR_FAQ } from './mentorFaq'
 import {
   collectStrings,
   findDenylistedTerm,
@@ -113,6 +115,58 @@ describe('glossary', () => {
 
   it('every glossary cross-reference (backtick term) resolves to a real entry', () => {
     expect(unknownGlossaryTerms(GLOSSARY)).toEqual([])
+  })
+})
+
+describe('Flack channels (#12)', () => {
+  it('has #platform, #deploys, #alerts, and DMs with Morgan and Kai', () => {
+    expect(CHANNELS.map((channel) => channel.id).sort()).toEqual([
+      'alerts',
+      'deploys',
+      'dm-kai',
+      'dm-morgan',
+      'platform',
+    ])
+    expect(
+      CHANNELS.filter((channel) => channel.kind === 'dm')
+        .map((c) => c.characterId)
+        .sort()
+    ).toEqual(['kai', 'morgan'])
+  })
+
+  it('has unique channel ids', () => {
+    const ids = CHANNELS.map((channel) => channel.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('builds a dynamic incident channel in the #inc-<n>-<slug> shape, distinct from the static list', () => {
+    expect(incidentChannelId(3, 'billing-outage')).toBe('inc-3-billing-outage')
+    const channel = incidentChannel(3, 'billing-outage', 'Coupons are double-discounting.')
+    expect(channel).toMatchObject({
+      id: 'inc-3-billing-outage',
+      name: 'inc-3-billing-outage',
+      kind: 'channel',
+    })
+    expect(CHANNELS.some((c) => c.id === channel.id)).toBe(false)
+  })
+})
+
+describe('Ask Kai (#12)', () => {
+  it('answers are 120 words or fewer', () => {
+    for (const [id, entry] of Object.entries(MENTOR_FAQ)) {
+      expect(wordCount(entry.answer), id).toBeLessThanOrEqual(120)
+    }
+  })
+
+  it('every question has a docs link on the allowlist', () => {
+    for (const [id, entry] of Object.entries(MENTOR_FAQ)) {
+      const url = new URL(entry.docs.href)
+      expect(ALLOWED_DOCS_HOSTS, id).toContain(url.hostname)
+    }
+  })
+
+  it('offers every FAQ entry as a general question, since no chapter has its own yet', () => {
+    expect(new Set(GENERAL_QUESTIONS)).toEqual(new Set(Object.keys(MENTOR_FAQ)))
   })
 })
 
@@ -290,7 +344,7 @@ describe('style checks (issue #10) — proven against fixtures', () => {
 describe("today's content is clean (chapters don't exist yet, but this content does)", () => {
   // Everything #10 actually ships: no chapters yet, so this is the real, non-fixture assertion —
   // the same functions above will scan chapters too, the moment a chapter ticket adds one.
-  const todaysContent = [characters, GLOSSARY, SERVICES, DOCS]
+  const todaysContent = [characters, GLOSSARY, SERVICES, DOCS, CHANNELS, MENTOR_FAQ]
 
   it('has no denylisted Kubernetes terms', () => {
     const violations = collectStrings(todaysContent).map(findDenylistedTerm).filter(Boolean)

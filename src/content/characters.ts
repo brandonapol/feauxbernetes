@@ -38,4 +38,31 @@ export const characters: Record<string, Character> = {
     role: 'Support lead',
     color: '#f59f00',
   },
+
+  // The bots (planning.md → "Flack (#12)"): each posts to one Flack channel and never appears in
+  // person anywhere else. `isBot` shows the "BOT" badge next to their name in Flack.
+  arghcd: {
+    id: 'arghcd',
+    name: 'Argh CD',
+    initials: 'CD',
+    role: 'Posts every sync to #deploys',
+    color: '#495057',
+    isBot: true,
+  },
+  pagerdoody: {
+    id: 'pagerdoody',
+    name: 'PagerDoody',
+    initials: 'PD',
+    role: 'Posts pages to #alerts',
+    color: '#c92a2a',
+    isBot: true,
+  },
+  gitnub: {
+    id: 'gitnub',
+    name: 'GitNub',
+    initials: 'GN',
+    role: 'Posts check results on pull requests',
+    color: '#1c7ed6',
+    isBot: true,
+  },
 }

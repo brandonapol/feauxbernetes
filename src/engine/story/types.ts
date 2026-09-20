@@ -1,3 +1,4 @@
+import type { GitOpsNotice } from '../gitops/events'
 import type { GameEvent, Tab } from '../events'
 import type { Action, GameState } from '../game'
 
@@ -11,6 +12,19 @@ export interface QuickReply {
  * picked. The content style guide bans a bare "Incorrect" — every distractor earns a reason.
  */
 export type KaiResponse = string
+
+/**
+ * A bot message's structured attachment (planning.md → "Flack (#12)"): Argh CD's sync result,
+ * PagerDoody's page, GitNub's check run, shown as a small card under the message text instead of
+ * more prose. `href` is a hash route (e.g. `#/argh-cd/apps/billing`) the card's link opens — the
+ * same deep-linking `useBrowserRouteSync` already gives every `#/tab/...` markdown link.
+ */
+export interface BotCard {
+  title: string
+  fields: Array<{ label: string; value: string }>
+  href?: string
+  linkLabel?: string
+}
 
 /**
  * Something the story makes happen. Effects are plain data (no functions) so that delayed ones can
@@ -30,6 +44,8 @@ export type Effect = (
       from: string
       text: string
       quickReplies?: QuickReply[]
+      /** A bot's structured attachment. See `BotCard`. */
+      card?: BotCard
     }
   | { type: 'unlockTab'; tab: Tab }
   | { type: 'openTab'; tab: Tab }
@@ -37,6 +53,20 @@ export type Effect = (
   | { type: 'closeOverlay' }
   | { type: 'toast'; text: string }
   | { type: 'showHint' }
+  /** Adds a Flack channel that isn't in `GameConfig.channels` — the dynamic `#inc-<n>-<slug>`
+   * channel `declareIncident` (#31) will create. Idempotent by `channel.id`. */
+  | { type: 'createChannel'; channel: Channel }
+  /** Switches Flack's active channel and marks it read, same as the learner clicking it in the
+   * sidebar. Lets a scripted effect (e.g. #31 declaring an incident) focus a channel it just
+   * created. */
+  | { type: 'openChannel'; channel: string }
+  /**
+   * GitOps engine (#7) plumbing: turns one of Argh CD's `GitOpsNotice`s into a `#deploys` message
+   * from the Argh CD bot. This is the "small addition" #12 makes so #16 (Argh CD part 2, which
+   * wires the gitops engine's `tick` into the store) only has to emit this effect, not know
+   * anything about Flack or bot characters.
+   */
+  | { type: 'gitOpsNotice'; notice: GitOpsNotice }
 ) & {
   /** Wait this long before applying. Only the store honours delays; tests apply at once. */
   delayMs?: number
@@ -165,6 +195,9 @@ export interface Chapter {
   steps: Step[]
   /** Bullet points for the completion screen. */
   summary: string[]
+  /** Ask Kai questions (see `MentorEntry`) worth suggesting while this chapter is current, on top
+   * of `GameConfig.mentorGeneralQuestions`. */
+  mentorQuestions?: string[]
 }
 
 export interface Character {
@@ -173,6 +206,8 @@ export interface Character {
   role: string
   color: string
   name: string
+  /** Shows a "BOT" badge next to the name in Flack (Argh CD, PagerDoody, GitNub). */
+  isBot?: boolean
 }
 
 export interface Channel {
@@ -185,14 +220,37 @@ export interface Channel {
   topic?: string
 }
 
+/**
+ * One of Ask Kai's FAQ answers (ticket #3 dropped mentor wiring when the story engine was ported;
+ * this brings it back for #12). `docs` is kept off the answer text on purpose — the content style
+ * guide caps an answer at 120 words, and `askMentor` (see `engine/game.ts`) appends the link to the
+ * posted Flack message itself, so the word count only ever covers Kai's own words.
+ */
+export interface MentorEntry {
+  question: string
+  answer: string
+  docs: DocsLink
+}
+
 /** Everything the engine needs from content. The engine never imports content directly. */
 export interface GameConfig {
   chapters: Chapter[]
   characters: Record<string, Character>
-  /** Flack channels and DMs, in sidebar order. */
+  /** Flack channels and DMs, in sidebar order. Dynamic channels (e.g. an incident channel) live in
+   * `GameState.flack.dynamicChannels` instead, and are appended after these in the sidebar. */
   channels: Channel[]
   /** The channel Flack opens on. Defaults to the first non-DM channel in the list. */
   defaultChannel?: string
   /** The clock at the start of a new game. */
   startTime: number
+  /** Ask Kai (planning.md → "Flack (#12)"), Ask Robin ported: who answers, which DM it lives in,
+   * and the FAQ itself, keyed by question id. Optional so a `GameConfig` without a mentor (e.g. a
+   * test fixture) still type-checks. */
+  mentor?: {
+    characterId: string
+    channel: string
+    entries: Record<string, MentorEntry>
+  }
+  /** Questions Ask Kai always offers, on top of the current chapter's `mentorQuestions`. */
+  mentorGeneralQuestions?: string[]
 }

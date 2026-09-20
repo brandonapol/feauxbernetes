@@ -38,7 +38,8 @@ describe('Browser', () => {
   it('opens on the Flack tab and puts it in the URL', () => {
     renderApp('', ['flack'])
     expect(screen.getByRole('tab', { name: /Flack/ })).toHaveAttribute('aria-selected', 'true')
-    expect(window.location.hash).toBe('#/flack')
+    // Flack (#12) redirects a bare `/flack` to its default channel.
+    expect(window.location.hash).toBe('#/flack/platform')
   })
 
   it('a deep link to an unlocked tab opens it', async () => {
@@ -60,13 +61,13 @@ describe('Browser', () => {
     expect(gitnub).toHaveAccessibleName(/you.ll unlock this later in the story/)
     await user.click(gitnub)
     expect(store.getState().game.ui.activeTab).toBe('flack')
-    expect(window.location.hash).toBe('#/flack')
+    expect(window.location.hash).toBe('#/flack/platform')
   })
 
   it('a deep link to a locked tab redirects to the active tab and explains why', async () => {
     renderApp('#/gitnub', ['flack'])
     expect(await screen.findByRole('tab', { name: 'Flack', selected: true })).toBeInTheDocument()
-    expect(window.location.hash).toBe('#/flack')
+    expect(window.location.hash).toBe('#/flack/platform')
     const toast = await screen.findByRole('status')
     expect(toast).toHaveTextContent("GitNub isn't open to you yet")
   })
