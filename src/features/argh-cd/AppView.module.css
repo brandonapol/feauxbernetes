@@ -53,3 +53,76 @@
   font-size: 0.8125rem;
   margin: 0;
 }
+
+.gitops {
+  margin: 1rem 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.gitnubSays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.gitnubSays p {
+  margin: 0;
+}
+
+.diff,
+.heal,
+.caption {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.heal {
+  color: var(--text-muted);
+}
+
+.syncButton,
+.rollbackButton {
+  padding: 6px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.rollbackButton {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.historyHeading {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.9375rem;
+}
+
+.history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}

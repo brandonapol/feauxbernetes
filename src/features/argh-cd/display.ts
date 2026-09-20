@@ -1,4 +1,5 @@
 import type { AppHealth, AppSummary, CopyState, DatabaseHealth } from '../../engine/cluster'
+import type { SyncStatus } from '../../engine/gitops'
 
 /**
  * Icon-plus-text for every health and copy state Argh CD shows. Nothing here is colour-coded —
@@ -14,6 +15,12 @@ export const HEALTH_DISPLAY: Record<AppHealth | DatabaseHealth, Display> = {
   Healthy: { icon: '✓', label: 'Healthy' },
   Progressing: { icon: '↻', label: 'Progressing' },
   Degraded: { icon: '!', label: 'Degraded' },
+}
+
+export const SYNC_DISPLAY: Record<SyncStatus, Display> = {
+  Synced: { icon: '✓', label: 'Synced' },
+  OutOfSync: { icon: '≠', label: 'Out of sync' },
+  Syncing: { icon: '↻', label: 'Syncing' },
 }
 
 export const COPY_STATE_DISPLAY: Record<CopyState, Display> = {

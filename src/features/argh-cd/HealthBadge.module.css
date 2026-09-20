@@ -21,6 +21,16 @@
   color: var(--danger);
 }
 
+.badge[data-sync='OutOfSync'] {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.badge[data-sync='Syncing'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .icon {
   font-size: 1em;
 }
