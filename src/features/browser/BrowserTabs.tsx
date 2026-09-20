@@ -60,7 +60,11 @@ export function BrowserTabs() {
             aria-selected={selected}
             aria-disabled={locked || undefined}
             tabIndex={selected ? 0 : -1}
-            title={locked ? "You'll unlock this later in the story" : undefined}
+            title={
+              locked
+                ? `${tab.blurb ?? tab.label} You’ll unlock this later in the story.`
+                : tab.blurb
+            }
             className={styles.tab}
             data-tab={tab.id}
             data-target={`tab:${tab.id}`}
@@ -74,7 +78,7 @@ export function BrowserTabs() {
             {tab.label}
             {locked && (
               <span className={styles.srOnly}>
-                , locked: you&rsquo;ll unlock this later in the story
+                , locked: {tab.blurb ?? 'you’ll unlock this later in the story'}
               </span>
             )}
             {badge !== undefined && (

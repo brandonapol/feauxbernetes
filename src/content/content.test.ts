@@ -166,8 +166,11 @@ describe('Ask Kai (#12)', () => {
     }
   })
 
-  it('offers every FAQ entry as a general question, since no chapter has its own yet', () => {
-    expect(new Set(GENERAL_QUESTIONS)).toEqual(new Set(Object.keys(MENTOR_FAQ)))
+  it('always-on Ask Kai prompts are a subset of the FAQ (#86)', () => {
+    expect(GENERAL_QUESTIONS.length).toBeGreaterThan(0)
+    for (const id of GENERAL_QUESTIONS) {
+      expect(MENTOR_FAQ[id]).toBeDefined()
+    }
   })
 })
 

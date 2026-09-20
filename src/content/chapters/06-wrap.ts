@@ -37,7 +37,7 @@ export const wrapChapter: Chapter = {
           id: 'morgan-wrap',
           channel: 'platform',
           from: 'morgan',
-          text: "That's week one, {{player.name}}. You watched a change ship, you watched the cluster heal itself, and you watched the robots catch a bug. The field guide is yours. Tuesday we talk about how good is good enough.",
+          text: "That's week one, {{player.name}}. You watched a change ship, you watched the cluster heal itself, and you watched the robots catch a bug. The field guide is yours. Next up is measuring good — SLOs — then alerts. On-call is a later chapter; we don't put you on the pager this week.",
         },
       ],
       solution: { type: 'chooseOption', stepId: 'ready', optionId: 'ready' },

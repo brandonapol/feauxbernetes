@@ -66,11 +66,8 @@ describe('GitNub', () => {
       })
     })
 
-    const pr = store.getState().game.gitops.pullRequests[0]
-    window.location.hash = `#/gitnub/inkwell/web/pull/${pr.id}`
-    // HashRouter may not pick up a hash write; click through the PR list instead.
-    await user.click(screen.getByRole('link', { name: /Pull requests/ }))
-    await user.click(screen.getByRole('link', { name: /Stricter sign-up email check/ }))
+    const prLink = await screen.findByRole('link', { name: /Stricter sign-up email check/ })
+    await user.click(prLink)
 
     expect(screen.getByText('Waiting for checks to finish.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Merge' })).toBeDisabled()

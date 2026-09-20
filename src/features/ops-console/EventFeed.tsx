@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
+import { currentChapter } from '../../engine/story'
 import { useGame } from '../../store'
 import { buildFeed, type FeedCategory } from './feed'
 import styles from './EventFeed.module.css'
@@ -63,10 +64,16 @@ export function EventFeed() {
   const clusterEvents = useGame((s) => s.game.clusterEvents)
   const gitopsEvents = useGame((s) => s.game.gitopsEvents)
   const ciNotices = useGame((s) => s.game.ciNotices)
-  const entries = useMemo(
-    () => buildFeed(clusterEvents, gitopsEvents, ciNotices),
-    [clusterEvents, gitopsEvents, ciNotices]
-  )
+  const chapterId = useGame((s) => currentChapter(s.config, s.game)?.id)
+  const quietStartup = chapterId === '00-welcome' || chapterId === '01-boxes'
+  const entries = useMemo(() => {
+    const cluster = quietStartup
+      ? clusterEvents.filter(
+          (event) => event.kind !== 'SuccessfulCreate' && event.kind !== 'Scheduled'
+        )
+      : clusterEvents
+    return buildFeed(cluster, gitopsEvents, ciNotices)
+  }, [clusterEvents, gitopsEvents, ciNotices, quietStartup])
 
   const [filter, setFilter] = useState<'all' | FeedCategory>('all')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -87,6 +94,11 @@ export function EventFeed() {
       <h2 id="ops-console-feed-heading" className={styles.heading}>
         What&rsquo;s happening
       </h2>
+      {quietStartup && (
+        <p className={styles.caption}>
+          The cluster is starting copies in the background — you don’t need to click these.
+        </p>
+      )}
       <div className={styles.chips} role="group" aria-label="Filter the feed">
         {FILTERS.map((chip) => (
           <button

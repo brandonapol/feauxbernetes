@@ -7,6 +7,8 @@ export interface TabInfo {
   path: string
   /** The plausible, read-only URL shown in the address bar while this tab is active. */
   address: string
+  /** One-line “what this is” for locked-tab hover (#97). */
+  blurb?: string
   /**
    * For a tab whose address changes with its sub-route (inkwell.example's real pages live on
    * different subdomains and paths, e.g. `status.inkwell.example`), overrides `address` given the
@@ -23,24 +25,33 @@ export interface TabInfo {
  */
 export const TABS: TabInfo[] = [
   { id: 'flack', label: 'Flack', path: '/flack', address: 'flack.example/platform' },
-  { id: 'gitnub', label: 'GitNub', path: '/gitnub', address: 'gitnub.example/inkwell/deploy' },
+  {
+    id: 'gitnub',
+    label: 'GitNub',
+    path: '/gitnub',
+    address: 'gitnub.example/inkwell/deploy',
+    blurb: 'Where wishes and pull requests live.',
+  },
   {
     id: 'arghcd',
     label: 'Argh CD',
     path: '/argh-cd',
     address: 'argh-cd.inkwell.internal/applications',
+    blurb: 'The window onto the boxes that run the site.',
   },
   {
     id: 'grafauxna',
     label: 'Grafauxna',
     path: '/grafauxna',
     address: 'grafauxna.inkwell.internal/d/billing',
+    blurb: 'Dashboards, logs, and how good is good enough.',
   },
   {
     id: 'pagerdoody',
     label: 'PagerDoody',
     path: '/pagerdoody',
     address: 'pagerdoody.example/incidents',
+    blurb: 'On-call schedule and pages. Later in the course.',
   },
   {
     id: 'inkwell',

@@ -95,7 +95,8 @@ export const selfHealChapter: Chapter = {
       wishOptions: [BOX_OFF, DELETE_ALL],
       solution: { type: 'setBox', boxId: 'box-b', on: false },
       goal: (_state, event) => event.type === 'boxToggled' && event.boxId === 'box-b' && !event.on,
-      afterNote: 'One box dying doesn’t take the app down, because copies already lived on more than one box.',
+      afterNote:
+        'One box dying doesn’t take the app down, because copies already lived on more than one box.',
     },
     {
       id: 'scale-up',

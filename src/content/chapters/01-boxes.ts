@@ -7,7 +7,7 @@ export const boxesChapter: Chapter = {
   title: 'Boxes that run stuff',
   milestone: 'm1',
   intro:
-    'Kai is going to show you Argh CD: the window onto the machines that run Inkwell. Three ideas, kept short on purpose.',
+    'Three pictures, then the jargon. A **box** is a machine. A **copy** is one running instance of an app on a box. The screen has three columns: Instructions (this panel), the fake browser in the middle, and the Ops Console on the right (a live feed — you don’t have to click it). Kai is going to show you Argh CD.',
   setup: (state) => {
     const world = startingWorld(state)
     return {

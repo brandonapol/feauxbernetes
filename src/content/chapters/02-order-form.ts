@@ -56,6 +56,16 @@ export const orderFormChapter: Chapter = {
         'That’s declarative: you said what you wanted. The cluster keeps making it true. Engineers write the same wish as YAML.',
     },
     {
+      id: 'watch-has',
+      title: 'Watch wants · has',
+      body: 'Look at Argh CD behind the overlay: **wants 3 · has 1** becomes **has 3** as copies start. Click the **search** tile if you want a closer look, then continue.',
+      hints: [
+        'The search tile is on the Applications page, under the overlay if you close it — or peek around it.',
+      ],
+      solution: { type: 'clickTarget', targetId: 'app:search' },
+      goal: (_state, event) => event.type === 'targetClicked' && event.targetId === 'app:search',
+    },
+    {
       id: 'view-yaml',
       title: 'View as YAML',
       body: 'Open the overlay again if it closed, tick **View as YAML**, and hover or focus a line. Each YAML line is just the English sentence in a stricter format. You’ll never need to write one.',

@@ -24,17 +24,6 @@ export const gitopsChapter: Chapter = {
   },
   steps: [
     {
-      id: 'open-gitnub',
-      title: 'Open GitNub',
-      body: 'Open the **GitNub** tab, then **inkwell/deploy**. That’s the wish book Argh CD reads.',
-      hints: ['GitNub is now unlocked in the fake browser’s tab strip.'],
-      solution: { type: 'openTab', tab: 'gitnub' },
-      goal: (state, event) =>
-        (event.type === 'tabOpened' && event.tab === 'gitnub') || state.ui.activeTab === 'gitnub',
-      onEnter: [{ type: 'unlockTab', tab: 'gitnub' }],
-      docs: [DOCS.argoCd],
-    },
-    {
       id: 'propose-web',
       title: 'Bump web to 2.0',
       body: 'In the wish editor, set **web** to version **2.0** and **Propose change**. Pick any of the titles.',
@@ -48,23 +37,35 @@ export const gitopsChapter: Chapter = {
       },
       goal: (_state, event) => event.type === 'prOpened',
       afterNote: 'Checks run on their own for a wish change. Kai will approve in a moment.',
+      docs: [DOCS.argoCd],
     },
     {
       id: 'merge-it',
       title: 'Merge the pull request',
       body: 'When checks are green and Kai has approved, click **Merge**. Watch the “Where is my change?” strip: PR opened → checks → merged → Argh CD → running.',
-      hints: ['Merge is the green button at the bottom of the pull request. It stays disabled until review lands.'],
+      hints: [
+        'Merge is the green button at the bottom of the pull request. It stays disabled until review lands.',
+      ],
       solution: { type: 'mergePR', prId: 'latest' },
       goal: (_state, event) => event.type === 'prMerged',
       afterNote: 'Argh CD will make the cluster match GitNub. That’s GitOps.',
     },
     {
+      id: 'open-arghcd',
+      title: 'Open Argh CD',
+      body: 'Open the **Argh CD** tab. GitNub just merged 2.0; Argh CD will make the cluster match.',
+      hints: ['Argh CD is in the fake browser’s tab strip.'],
+      solution: { type: 'openTab', tab: 'arghcd' },
+      goal: (state, event) =>
+        (event.type === 'tabOpened' && event.tab === 'arghcd') || state.ui.activeTab === 'arghcd',
+    },
+    {
       id: 'watch-deploy',
       title: 'Watch the deploy',
-      body: 'Open **Argh CD** and the **web** app. Copies of 2.0 appear one at a time; the old ones shut down. The caption will say “2 of 3 swapped.”',
-      hints: ['Argh CD → web. Give it a second if copies are still starting.'],
-      solution: { type: 'openTab', tab: 'arghcd' },
-      goal: (_state, event) => event.type === 'tabOpened' && event.tab === 'arghcd',
+      body: 'Open the **web** app. Copies of 2.0 appear one at a time; the old ones shut down. This step completes when the cluster’s wish is 2.0 (Argh CD has synced).',
+      hints: ['Argh CD → web. Give it a few seconds if copies are still starting.'],
+      solution: { type: 'tick', deltaMs: 8000 },
+      goal: (state) => state.cluster.wishes.web?.version === '2.0',
     },
     {
       id: 'drift',
@@ -76,7 +77,9 @@ export const gitopsChapter: Chapter = {
           id: 'scale-web-6',
           label: 'Keep 6 copies of web running',
           preview: { label: 'copies', from: '3', to: '6' },
-          kubectl: [{ code: 'scale web --replicas=6', note: 'A hand change. Argh CD will undo it.' }],
+          kubectl: [
+            { code: 'scale web --replicas=6', note: 'A hand change. Argh CD will undo it.' },
+          ],
           action: { type: 'chooseWish', app: 'web', version: '2.0', copies: 6 },
         },
       ],
@@ -111,14 +114,13 @@ export const gitopsChapter: Chapter = {
         event.stepId === 'dragons' &&
         event.optionId === 'remembers',
       wrongAnswers: {
-        slow:
-          'Kai: "Start time isn’t the point. The database stores accounts and documents. A disposable copy of web can vanish; this can’t."',
+        slow: 'Kai: "Start time isn’t the point. The database stores accounts and documents. A disposable copy of web can vanish; this can’t."',
         'one-box':
           'Kai: "It isn’t about one box. It’s that the data is unique. Copies of web are identical and replaceable. The database isn’t."',
       },
     },
   ],
-  mentorQuestions: ['what-is-a-pod'],
+  mentorQuestions: ['why-databases-are-hard'],
   summary: [
     'A merged wish in GitNub is what Argh CD makes true. That’s GitOps.',
     'A change in the Ops Console is temporary — Argh CD puts it back.',

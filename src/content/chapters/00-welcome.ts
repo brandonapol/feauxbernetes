@@ -77,7 +77,7 @@ export const welcomeChapter: Chapter = {
           id: 'kai-tour',
           channel: 'dm-kai',
           from: 'kai',
-          text: "Quick tour. The middle panel is a fake browser. **Flack** is us. **inkwell.example** is what customers see. **Argh CD** is how we watch the boxes that run the site. The other tabs stay locked until later this week.\n\nPinned for the week:\n• Mon: how code ships\n• Tue: the robots\n• Wed: measuring good\n• Thu: alerts\n• Fri: you're on call",
+          text: 'Quick tour. The middle panel is a fake browser. **Flack** is us. **inkwell.example** is what customers see. **Argh CD** is how we watch the boxes that run the site. The other tabs stay locked until later this week.\n\nPinned for the week:\n• Mon: how code ships (boxes, wishes, GitNub)\n• Tue: the robots (CI)\n• Wed: measuring good (SLOs)\n• Thu: alerts (when to wake someone)\n• Fri: wrap — field guide in your pocket. On-call comes after that, in a later chapter.',
           delayMs: 800,
         },
       ],
@@ -90,7 +90,7 @@ export const welcomeChapter: Chapter = {
       solution: { type: 'openTab', tab: 'inkwell' },
       goal: (_state, event) => event.type === 'tabOpened' && event.tab === 'inkwell',
       afterNote:
-        'If checkout breaks on Friday, this is where you’ll see it the way a customer does.',
+        'If checkout breaks during an outage later, this is where you’ll see it the way a customer does.',
     },
     {
       id: 'open-arghcd',

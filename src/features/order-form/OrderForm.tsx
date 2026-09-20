@@ -36,7 +36,6 @@ export function OrderForm() {
 
   const makeItSo = () => {
     dispatch({ type: 'chooseWish', app, version, copies })
-    dispatch({ type: 'closeOverlay' })
   }
 
   return (

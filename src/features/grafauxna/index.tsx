@@ -34,6 +34,8 @@ export function Grafauxna() {
           <Link
             to="/grafauxna/slos"
             aria-current={pathname.startsWith('/grafauxna/slos') ? 'page' : undefined}
+            data-target="grafauxna-slos"
+            onClick={() => dispatch({ type: 'clickTarget', targetId: 'grafauxna-slos' })}
           >
             SLOs
           </Link>

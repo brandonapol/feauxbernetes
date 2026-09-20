@@ -11,6 +11,12 @@
   font-size: 0.9375rem;
 }
 
+.caption {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
