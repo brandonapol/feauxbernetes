@@ -1,4 +1,5 @@
 import type {
+  AppHealth,
   AppSummary,
   Box,
   ClusterConfig,
@@ -76,6 +77,13 @@ export function summary(cluster: ClusterState, app: string): AppSummary {
     starting: count('Starting'),
     stopping: count('Stopping'),
   }
+}
+
+/** See `AppHealth`: reads it straight off `summary`, nothing more. */
+export function health(cluster: ClusterState, app: string): AppHealth {
+  const s = summary(cluster, app)
+  if (s.starting > 0 || s.stopping > 0) return 'Progressing'
+  return s.wants === s.has ? 'Healthy' : 'Degraded'
 }
 
 /**

@@ -4,6 +4,7 @@ import { basicCluster, boxes, config, DATABASE } from './__fixtures__/basicClust
 import {
   crashCopy,
   createCluster,
+  health,
   setBox,
   setWish,
   summary,
@@ -11,6 +12,7 @@ import {
   versionAt,
   versionBehaviour,
 } from './cluster'
+import type { Copy } from './types'
 
 describe('createCluster', () => {
   it('starts with no copies and one history entry per wish', () => {
@@ -76,6 +78,54 @@ describe('summary', () => {
     const cluster = basicCluster()
     expect(summary(cluster, 'search')).toEqual({ wants: 3, has: 0, starting: 0, stopping: 0 })
     expect(summary(cluster, 'billing')).toEqual({ wants: 0, has: 0, starting: 0, stopping: 0 })
+  })
+})
+
+describe('health', () => {
+  const copy = (overrides: Partial<Copy> = {}): Copy => ({
+    id: 'search-1',
+    app: 'search',
+    version: 'v1',
+    boxId: 'box-1',
+    state: 'Running',
+    startedAt: 0,
+    restarts: 0,
+    ...overrides,
+  })
+
+  it('is Healthy when copies match the wish and nothing is in flight', () => {
+    const cluster = basicCluster()
+    const settled = {
+      ...cluster,
+      copies: [copy(), copy({ id: 'search-2' }), copy({ id: 'search-3' })],
+    }
+    expect(health(settled, 'search')).toBe('Healthy')
+  })
+
+  it('is Progressing while a copy is still starting or stopping, even short of the wish', () => {
+    const cluster = basicCluster()
+    const starting = { ...cluster, copies: [copy({ state: 'Starting' })] }
+    expect(health(starting, 'search')).toBe('Progressing')
+
+    const stopping = {
+      ...cluster,
+      copies: [
+        copy(),
+        copy({ id: 'search-2' }),
+        copy({ id: 'search-3' }),
+        copy({ id: 'search-4', state: 'Stopping' }),
+      ],
+    }
+    expect(health(stopping, 'search')).toBe('Progressing')
+  })
+
+  it('is Degraded when short of the wish with nothing in flight to fix it', () => {
+    const cluster = basicCluster()
+    expect(health(cluster, 'search')).toBe('Degraded')
+  })
+
+  it('an app with no wish at all reads Healthy (0 wanted, 0 has)', () => {
+    expect(health(basicCluster(), 'billing')).toBe('Healthy')
   })
 })
 

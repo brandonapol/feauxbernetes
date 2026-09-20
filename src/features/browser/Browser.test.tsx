@@ -49,7 +49,8 @@ describe('Browser', () => {
       'true'
     )
     expect(store.getState().game.ui.activeTab).toBe('arghcd')
-    expect(window.location.hash).toBe('#/argh-cd')
+    // Argh CD (#14) redirects its bare index route to its default sub-route.
+    expect(window.location.hash).toBe('#/argh-cd/applications')
   })
 
   it('a locked tab explains itself, cannot be opened by click, and stays put', async () => {
@@ -91,7 +92,8 @@ describe('Browser', () => {
   it('follows the story when it switches tabs', () => {
     const store = renderApp('', ['flack', 'gitnub', 'arghcd'])
     act(() => store.getState().dispatch({ type: 'openTab', tab: 'arghcd' }))
-    expect(window.location.hash).toBe('#/argh-cd')
+    // Argh CD (#14) redirects its bare index route to its default sub-route.
+    expect(window.location.hash).toBe('#/argh-cd/applications')
   })
 
   it('shows a read-only address bar for the active tab', () => {

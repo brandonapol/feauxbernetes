@@ -1,0 +1,26 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--chrome);
+}
+
+.badge[data-health='Healthy'] {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.badge[data-health='Degraded'] {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.icon {
+  font-size: 1em;
+}

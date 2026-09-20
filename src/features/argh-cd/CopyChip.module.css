@@ -1,0 +1,84 @@
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 4.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  animation: chip-enter 200ms ease-out;
+}
+
+.chip:hover .circle,
+.chip:focus-visible .circle {
+  border-color: var(--accent);
+}
+
+.chip[data-leaving] {
+  animation: chip-leave 220ms ease-in forwards;
+  cursor: default;
+}
+
+.chip[data-selected] .circle {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.chip[data-state='Crashed'] .circle {
+  border-style: dashed;
+}
+
+.icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.label {
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.state {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes chip-leave {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}

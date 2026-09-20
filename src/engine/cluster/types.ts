@@ -97,3 +97,12 @@ export interface AppSummary {
   starting: number
   stopping: number
 }
+
+/**
+ * The three-state read of "is this app doing what its wish says", straight from `summary` and
+ * nothing else: `Healthy` matches the wish with nothing in flight, `Progressing` is still working
+ * towards it (copies starting or stopping), and `Degraded` is stuck short of the wish with nothing
+ * currently fixing it (e.g. no box has room). Argh CD part 2 (#16) layers GitOps sync status
+ * (`Synced`/`OutOfSync`) on top of this same read — it doesn't replace it.
+ */
+export type AppHealth = 'Healthy' | 'Progressing' | 'Degraded'

@@ -1,0 +1,35 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--chrome);
+}
+
+.title {
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.link {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.link:hover {
+  background: var(--chrome-hover);
+}
+
+.link[aria-current='page'] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
