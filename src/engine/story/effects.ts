@@ -104,6 +104,10 @@ export function applyEffect(config: GameConfig, state: GameState, effect: Effect
     case 'toast':
       return { state: { ...state, ui: { ...state.ui, toast: effect.text } }, events: [] }
 
+    case 'unlockUnplugCopy':
+      if (state.ui.canUnplugCopies) return { state, events: [] }
+      return { state: { ...state, ui: { ...state.ui, canUnplugCopies: true } }, events: [] }
+
     case 'showHint': {
       const step = config.chapters.find((c) => c.id === state.story.chapterId)?.steps[
         state.story.stepIndex

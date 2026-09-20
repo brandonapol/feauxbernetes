@@ -1,0 +1,85 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: var(--overlay-backdrop);
+  z-index: 20;
+}
+
+.drawer {
+  width: min(20rem, 90vw);
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.25rem;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.close {
+  border: 1px solid var(--border);
+  background: var(--chrome);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.state {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.logHeading {
+  font-size: 0.9rem;
+  margin: 0 0 0.4rem;
+}
+
+.log {
+  margin: 0 0 1.25rem;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.unplug {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: var(--surface);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.unplug:hover {
+  background: var(--danger);
+  color: var(--accent-text);
+}

@@ -155,6 +155,8 @@ export interface GameState {
      * are temporary" banner (#13).
      */
     gitOpsEnforced?: boolean
+    /** Argh CD's copy drawer shows "Unplug this copy" once this is true. See `unlockUnplugCopy`. */
+    canUnplugCopies: boolean
   }
   story: StoryState
   cluster: ClusterState
@@ -271,7 +273,7 @@ export function blankState(config: GameConfig): GameState {
         config.defaultChannel ?? config.channels.find((channel) => channel.kind === 'channel')?.id,
       dynamicChannels: [],
     },
-    ui: { activeTab: 'flack', unlockedTabs: ['flack'] },
+    ui: { activeTab: 'flack', unlockedTabs: ['flack'], canUnplugCopies: false },
     story: {
       chapterId: config.chapters[0]?.id ?? '',
       phase: 'playing',

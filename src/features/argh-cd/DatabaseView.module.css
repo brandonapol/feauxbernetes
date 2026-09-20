@@ -1,0 +1,33 @@
+.breadcrumb {
+  margin: 0 0 0.5rem;
+}
+
+.heading {
+  margin: 0 0 0.4rem;
+}
+
+.version {
+  margin: 0.5rem 0;
+  color: var(--text-muted);
+}
+
+.summary {
+  color: var(--text-muted);
+}
+
+.card {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}

@@ -67,6 +67,12 @@ export type Effect = (
    * anything about Flack or bot characters.
    */
   | { type: 'gitOpsNotice'; notice: GitOpsNotice }
+  /**
+   * Argh CD's copy drawer shows "Unplug this copy" only once a chapter has unlocked it (Ch 3, see
+   * planning.md → "It turns itself back on") — before that, the drawer is read-mostly. Forward-only,
+   * like `unlockTab`: no chapter ever needs to take it back.
+   */
+  | { type: 'unlockUnplugCopy' }
 ) & {
   /** Wait this long before applying. Only the store honours delays; tests apply at once. */
   delayMs?: number
