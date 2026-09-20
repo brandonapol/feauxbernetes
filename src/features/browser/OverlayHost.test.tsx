@@ -87,7 +87,7 @@ describe('OverlayHost', () => {
     expect(gotIt).toHaveFocus()
   })
 
-  it('shows different placeholder copy for a different overlay id', () => {
+  it('shows the page overlay for overlay id page', () => {
     const store = createGameStore({ config: createGameConfig() })
     store.getState().dispatch({ type: 'openOverlay', overlay: 'page' })
     render(
@@ -96,6 +96,6 @@ describe('OverlayHost', () => {
       </GameStoreProvider>
     )
     expect(screen.getByRole('dialog', { name: 'Incoming page' })).toBeInTheDocument()
-    expect(screen.getByText(/pager interruption/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Acknowledge' })).toBeInTheDocument()
   })
 })
