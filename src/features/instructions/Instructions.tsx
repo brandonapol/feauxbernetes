@@ -8,7 +8,14 @@ import { ConfirmButton } from './ConfirmButton'
 import styles from './Instructions.module.css'
 import { InstructionsText } from './InstructionsText'
 import { MultipleChoice } from './MultipleChoice'
-import { describeSolution, showMe, tabForShowMeTarget, targetIdFor } from './showMe'
+import {
+  describeSolution,
+  findShowMeTarget,
+  routeForShowMeTarget,
+  showMe,
+  tabForShowMeTarget,
+  targetIdFor,
+} from './showMe'
 import { StepList } from './StepList'
 import { ThinkingCallout } from './ThinkingCallout'
 import { WhereIsMyChange } from './WhereIsMyChange'
@@ -57,6 +64,14 @@ export function Instructions() {
     const targetId = step?.solution && targetIdFor(step.solution, game)
     if (!targetId) return
     const tab = tabForShowMeTarget(targetId)
+    const route = routeForShowMeTarget(targetId)
+    if (route && !findShowMeTarget(targetId) && tab && game.ui.unlockedTabs.includes(tab)) {
+      // The target lives on a sub-view (e.g. Argh CD's Applications, not Boxes): go straight to
+      // it. Changing the hash is enough; `useBrowserRouteSync` opens the owning tab from the URL.
+      window.location.assign(`#${route}`)
+      window.setTimeout(() => showMe(targetId), 50)
+      return
+    }
     if (tab && tab !== game.ui.activeTab && game.ui.unlockedTabs.includes(tab)) {
       dispatch({ type: 'openTab', tab })
       window.setTimeout(() => showMe(targetId), 50)
