@@ -5,6 +5,7 @@ import {
   describeSolution,
   findShowMeTarget,
   showMe,
+  routeForShowMeTarget,
   tabForShowMeTarget,
   targetIdFor,
 } from './showMe'
@@ -101,6 +102,15 @@ describe('tabForShowMeTarget', () => {
     expect(tabForShowMeTarget('pr:pr-1:merge')).toBe('gitnub')
     expect(tabForShowMeTarget('app:search')).toBe('arghcd')
     expect(tabForShowMeTarget('tab:inkwell')).toBe('inkwell')
+  })
+})
+
+describe('routeForShowMeTarget', () => {
+  it('sends Argh CD targets that live off the Boxes view to the view that renders them (#103)', () => {
+    expect(routeForShowMeTarget('database')).toBe('/argh-cd/applications')
+    expect(routeForShowMeTarget('app:search')).toBe('/argh-cd/applications')
+    expect(routeForShowMeTarget('sync:search')).toBe('/argh-cd/app/search')
+    expect(routeForShowMeTarget('channel:dm-kai')).toBeUndefined()
   })
 })
 

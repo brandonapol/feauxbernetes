@@ -99,6 +99,17 @@ export function tabForShowMeTarget(targetId: string): Tab | undefined {
 }
 
 /**
+ * The route inside a tab that renders a Show me target, for targets the tab switch alone doesn't
+ * reach (#103): Argh CD keeps its Applications / Boxes / app views as sub-routes, so a learner
+ * left on Boxes has no `database` tile or `app:*` card on screen to highlight.
+ */
+export function routeForShowMeTarget(targetId: string): string | undefined {
+  if (targetId === 'database' || targetId.startsWith('app:')) return '/argh-cd/applications'
+  if (targetId.startsWith('sync:')) return `/argh-cd/app/${targetId.slice(5)}`
+  return undefined
+}
+
+/**
  * A one-line, human-readable description of a step's `solution`, for the "Do this:" reveal.
  * Content never writes this text itself — every step's `body`/`hints` already say what to do in
  * the story's own words, so this is only a plain, generic fallback for the exact click.

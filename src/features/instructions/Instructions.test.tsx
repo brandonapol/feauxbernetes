@@ -244,6 +244,45 @@ describe('Instructions panel', () => {
     expect(document.activeElement).toBe(target)
   })
 
+  it('Show me switches Argh CD to the sub-view that renders its target (#103)', () => {
+    vi.useFakeTimers()
+    try {
+      const config = buildConfig()
+      config.chapters[0].steps[0].solution = { type: 'clickTarget', targetId: 'database' }
+      const store = createGameStore({ config, storage: noStorage })
+      run(store, { type: 'openTab', tab: 'flack' })
+      store.setState({
+        game: {
+          ...store.getState().game,
+          ui: {
+            ...store.getState().game.ui,
+            activeTab: 'arghcd',
+            unlockedTabs: ['flack', 'arghcd'],
+          },
+        },
+      })
+      window.location.hash = '#/argh-cd/boxes'
+      render(
+        <GameStoreProvider store={store}>
+          <Instructions />
+        </GameStoreProvider>
+      )
+      click(screen.getByRole('button', { name: 'Show me' }))
+      expect(window.location.hash).toBe('#/argh-cd/applications')
+
+      // Applications renders the database tile once the route lands.
+      const tile = document.createElement('button')
+      tile.dataset.target = 'database'
+      document.body.appendChild(tile)
+      act(() => void vi.advanceTimersByTime(50))
+      expect(tile).toHaveAttribute('data-show-me', 'true')
+      tile.remove()
+    } finally {
+      vi.useRealTimers()
+      window.location.hash = ''
+    }
+  })
+
   it('pulses the hint button after two misses', () => {
     const { store } = setup()
     run(store, { type: 'clickTarget', targetId: 'start' })
