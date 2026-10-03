@@ -1,6 +1,7 @@
 import type { GameEvent } from '../events'
 import type { GameState } from '../game'
 import { approvePR } from '../gitops'
+import { applyIncidentCommand } from '../incident/incident'
 import { interpolate } from './template'
 import type { Effect, GameConfig } from './types'
 
@@ -161,6 +162,18 @@ export function applyEffect(config: GameConfig, state: GameState, effect: Effect
         state: { ...state, gitops },
         events: [{ type: 'prApproved', prId: effect.prId, reviewer: effect.reviewer }],
       }
+    }
+
+    case 'incident': {
+      const result = applyIncidentCommand(config, state, effect.command)
+      let next = result.state
+      const events = [...result.events]
+      for (const followUp of result.effects) {
+        const applied = applyEffect(config, next, followUp)
+        next = applied.state
+        events.push(...applied.events)
+      }
+      return { state: next, events }
     }
   }
 }

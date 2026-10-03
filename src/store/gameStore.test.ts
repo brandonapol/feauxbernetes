@@ -134,6 +134,26 @@ describe('game store', () => {
       expect(hasSamMessage(store)).toBe(true)
     })
 
+    it('learner actions while paused neither move the clock nor fire due effects', () => {
+      const store = createGameStore({ config, storage: memoryStorage(), timers })
+      playToWish(store)
+      vi.advanceTimersByTime(3000 - TYPING_LEAD_MS)
+      store.getState().pause()
+      const clockAtPause = store.getState().game.clock.now
+
+      // Every action normally nudges the fake clock forward. Enough of them would pass the
+      // message's due time, so pausing has to hold the clock still for these too.
+      for (let i = 0; i < 200; i++) store.getState().dispatch({ type: 'dismissToast' })
+      vi.advanceTimersByTime(60_000)
+      expect(store.getState().game.clock.now).toBe(clockAtPause)
+      expect(hasSamMessage(store)).toBe(false)
+      expect(store.getState().scheduled).toHaveLength(1)
+
+      store.getState().resume()
+      vi.advanceTimersByTime(TYPING_LEAD_MS)
+      expect(hasSamMessage(store)).toBe(true)
+    })
+
     it('pause is a no-op if already paused, and resume a no-op if already running', () => {
       const store = createGameStore({ config, storage: memoryStorage(), timers })
       store.getState().pause()

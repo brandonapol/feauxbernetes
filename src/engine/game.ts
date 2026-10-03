@@ -38,13 +38,21 @@ import {
   type PullRequest,
   type PullRequestChange,
 } from './gitops'
+import {
+  createIncidentState,
+  recordIfOpen,
+  tickIncident,
+  type IncidentCommand,
+  type IncidentState,
+} from './incident'
 import { applyEffect, openChannelState } from './story/effects'
 import { advanceStory, enterStep, skipStep } from './story/runner'
 import type { BotCard, Channel, Effect, GameConfig, KaiResponse, QuickReply } from './story/types'
 
-// Bumped for #17: GameState grew a `statusPage` slot. No migration is worth writing this early —
-// an old save just gets discarded (see `store/persistence.ts` → `migrate`) and the game restarts.
-export const GAME_STATE_VERSION = 2
+// Bumped for #17: GameState grew a `statusPage` slot. Bumped again for #31: `incident` went from a
+// placeholder to the real incident state. No migration is worth writing this early — an old save
+// just gets discarded (see `store/persistence.ts` → `migrate`) and the game restarts.
+export const GAME_STATE_VERSION = 3
 
 /**
  * Placeholder engine state slots.
@@ -64,8 +72,6 @@ export const GAME_STATE_VERSION = 2
 type TelemetryState = Record<string, never>
 // TODO(#30): swap for the test lab engine's real state (test steps, the fake app model).
 type TestLabState = Record<string, never>
-// TODO(#31): swap for the incident engine's real state (timeline, roles, scorecard).
-type IncidentState = Record<string, never>
 
 /**
  * A plain-English one-liner for the Ops Console's "Checks" feed category (#13), matching the
@@ -275,6 +281,12 @@ export type Action =
   /** Argh CD (#16): re-apply a history entry to the cluster. GitNub is unchanged, so auto-sync
    * will bounce it back — see `rollback` in `engine/gitops/sync.ts`. */
   | { type: 'rollback'; app: string; historyId: string }
+  /**
+   * Incident (#31): page, acknowledge, declare, record a hypothesis or mitigation, post a status
+   * update, resolve. See `engine/incident` → `IncidentCommand`. A chapter can schedule the same
+   * commands as an `incident` effect.
+   */
+  | { type: 'incident'; command: IncidentCommand }
 
 export interface ReduceResult {
   state: GameState
@@ -337,7 +349,7 @@ export function blankState(config: GameConfig): GameState {
     ci: createCiState(),
     telemetry: {},
     testlab: {},
-    incident: {},
+    incident: createIncidentState(),
   }
 }
 
@@ -405,7 +417,7 @@ function tick(config: GameConfig, previous: GameState, deltaMs: number): ReduceR
   const { gitops, cluster, events, notices } = gitopsTick(previous.gitops, previous.cluster, now)
   const clusterEvents = events.filter((event): event is ClusterEvent => !isGitOpsEvent(event))
   const gitopsEvents = events.filter(isGitOpsEvent)
-  const state: GameState = {
+  const ticked: GameState = {
     ...previous,
     clock: { now },
     cluster,
@@ -414,12 +426,15 @@ function tick(config: GameConfig, previous: GameState, deltaMs: number): ReduceR
     clusterEvents: [...previous.clusterEvents, ...clusterEvents],
     gitopsEvents: [...previous.gitopsEvents, ...gitopsEvents],
   }
+  // The incident's customer impact counter samples telemetry at the new time (#31).
+  const incident = tickIncident(config, ticked)
   return advanceStory(
     config,
-    state,
+    incident.state,
     [
       ...clusterEvents.map((event) => ({ type: 'clusterEvent' as const, event })),
       ...gitopsEvents.map((event) => ({ type: 'gitOpsEvent' as const, event })),
+      ...incident.events,
     ],
     notices.map((notice) => ({ type: 'gitOpsNotice' as const, notice }))
   )
@@ -640,8 +655,14 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
     case 'revertPR': {
       try {
         const { gitops, pullRequest } = revertGitOpsPR(state.gitops, action.prId, state.clock.now)
-        return advanceStory(config, { ...state, gitops }, [
+        const recorded = recordIfOpen(
+          { ...state, gitops },
+          'rollbackStarted',
+          `Rollback started: reverted ${action.prId} in GitNub.`
+        )
+        return advanceStory(config, recorded.state, [
           { type: 'prReverted', prId: action.prId, revertPrId: pullRequest.id },
+          ...recorded.events,
         ])
       } catch {
         return { state: previous, effects: [] }
@@ -650,6 +671,9 @@ export function reduce(config: GameConfig, previous: GameState, action: Action):
 
     case 'suggestFix':
       return suggestFix(config, state, action)
+
+    case 'incident':
+      return advanceStory(config, state, [], [{ type: 'incident', command: action.command }])
 
     case 'sync':
       return applyArghAction(
@@ -893,10 +917,15 @@ function applyArghAction(
       cluster: result.cluster,
       gitopsEvents: [...state.gitopsEvents, ...result.events],
     }
+    // An Argh CD rollback of the hurting app goes on the incident timeline (#31).
+    const recorded =
+      event.type === 'appRolledBack' && state.incident.current?.service === event.app
+        ? recordIfOpen(next, 'rollbackStarted', `Rollback started: ${event.app} in Argh CD.`)
+        : { state: next, events: [] }
     return advanceStory(
       config,
-      next,
-      [event],
+      recorded.state,
+      [event, ...recorded.events],
       result.notices.map((notice) => ({ type: 'gitOpsNotice' as const, notice }))
     )
   } catch {

@@ -1,0 +1,197 @@
+.hud {
+  position: fixed;
+  top: 10px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.8125rem;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+}
+
+.chipLink {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.chipLabel {
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.impact {
+  font-size: 0.8125rem;
+}
+
+.impactCount {
+  font-variant-numeric: tabular-nums;
+}
+
+.impactStopped {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.pauseButton,
+.resumeButton,
+.postButton {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pauseButton[aria-pressed='true'] {
+  background: var(--success);
+}
+
+.postButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pauseBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--overlay-backdrop);
+}
+
+.pauseDialog {
+  max-width: 28rem;
+  padding: 24px 28px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 30%);
+}
+
+.pauseTitle {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--paper);
+}
+
+.composerTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stage {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.stage[aria-checked='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.optionNote {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.postButton {
+  align-self: flex-start;
+}
+
+.scorecard {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.scorecardTitle {
+  margin: 0 0 8px;
+}
+
+.scoreTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.scoreTable th,
+.scoreTable td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.band {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

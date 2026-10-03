@@ -2,6 +2,7 @@ import type { TestSuite } from '../ci'
 import type { GitOpsNotice } from '../gitops/events'
 import type { GameEvent, Tab } from '../events'
 import type { Action, GameState } from '../game'
+import type { IncidentCommand, IncidentContent } from '../incident/types'
 
 export interface QuickReply {
   id: string
@@ -81,6 +82,12 @@ export type Effect = (
    * *after* checks pass, or the Action `approvePR` waits until they have.
    */
   | { type: 'approvePR'; prId: string; reviewer: string }
+  /**
+   * Incident engine (#31): page the learner, declare, record a hypothesis, post a status update,
+   * resolve, … — the same commands the `incident` action carries, so a chapter can schedule them
+   * (e.g. a page that lands 30 seconds after the step starts). See `engine/incident`.
+   */
+  | { type: 'incident'; command: IncidentCommand }
 ) & {
   /** Wait this long before applying. Only the store honours delays; tests apply at once. */
   delayMs?: number
@@ -297,4 +304,7 @@ export interface GameConfig {
    * and a PR for an app with no suite just runs an empty (always-green) e2e job.
    */
   testSuites?: Record<string, TestSuite>
+  /** Incident content (#31): roles, templates, impact models, status updates, typical-team
+   * ranges. Optional so fixtures without incidents still type-check. */
+  incident?: IncidentContent
 }
