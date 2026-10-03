@@ -57,7 +57,8 @@ export interface GameStoreState {
   dismissNotice: () => void
   /** Writes a pending (debounced) save now. Call it when the page is going away. */
   flushSave: () => void
-  /** Stops the fake clock. Delayed effects and cluster reconciles freeze exactly where they are. */
+  /** Stops the fake clock. Delayed effects, cluster reconciles and the incident's customer impact
+   * counter freeze exactly where they are, and learner actions don't move the clock either. */
   pause: () => void
   /** Restarts the fake clock where `pause` left it. */
   resume: () => void
@@ -173,6 +174,7 @@ export function createGameStore(options: GameStoreOptions): GameStore {
    * can itself schedule more (a reply chain), so this keeps going until nothing more is due.
    */
   const drainDue = () => {
+    if (store.getState().paused) return
     for (;;) {
       const { game, scheduled } = store.getState()
       const due = scheduled
@@ -198,7 +200,16 @@ export function createGameStore(options: GameStoreOptions): GameStore {
 
   const dispatch = (action: Action) => {
     if (action.type === 'restartChapter' || action.type === 'startChapter') cancelAll()
-    commit(reduce(config, store.getState().game, action))
+    const { game, paused } = store.getState()
+    if (paused && action.type === 'tick') return
+    const result = reduce(config, game, action)
+    // Paused means the fake clock is stopped, for everyone: the learner can still read, click and
+    // reply, but their actions don't nudge time forward, so nothing scheduled comes due (#31).
+    commit(
+      paused && result.state.clock.now !== game.clock.now
+        ? { ...result, state: { ...result.state, clock: game.clock } }
+        : result
+    )
   }
 
   const tick = () => {
@@ -225,6 +236,8 @@ export function createGameStore(options: GameStoreOptions): GameStore {
   const resume = () => {
     if (!store.getState().paused) return
     store.setState({ paused: false })
+    drainDue()
+    updateTyping()
     startTicking()
   }
 

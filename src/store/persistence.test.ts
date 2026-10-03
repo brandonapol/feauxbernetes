@@ -200,3 +200,43 @@ describe('failure modes', () => {
     expect(() => browserStorage()).not.toThrow()
   })
 })
+
+describe('incident state (#31)', () => {
+  it('round-trips an open incident, timeline and all', () => {
+    const storage = memoryStorage()
+    const base = blankState(config)
+    const game: GameState = {
+      ...base,
+      incident: {
+        declaredCount: 1,
+        current: {
+          service: 'billing',
+          phase: 'open',
+          startedAt: 100,
+          marks: { paged: 100, acked: 160, declared: 200 },
+          declaration: {
+            number: 1,
+            slug: 'checkout',
+            channelId: 'inc-1-checkout',
+            severity: 'SEV2',
+            roles: { commander: 'morgan', ops: 'player', comms: 'taylor' },
+          },
+          timeline: [{ at: 100, kind: 'paged', text: 'Paged: checkout' }],
+          impact: { customers: 12.5, sampledAt: 200 },
+          statusPosts: [],
+        },
+      },
+    }
+    expect(writeSave(storage, game, [])).toBe(true)
+    const loaded = loadSave(storage)
+    expect(loaded.kind).toBe('loaded')
+    if (loaded.kind === 'loaded') expect(loaded.save.game.incident).toEqual(game.incident)
+  })
+
+  it('discards a save from before the incident engine landed (version 2)', () => {
+    const storage = memoryStorage()
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, game: {}, scheduled: [] }))
+    expect(GAME_STATE_VERSION).toBe(3)
+    expect(loadSave(storage)).toEqual({ kind: 'discarded' })
+  })
+})

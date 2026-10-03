@@ -1,6 +1,7 @@
 import type { ClusterEvent } from './cluster'
 import type { GitOpsEvent } from './gitops'
 import type { StatusUpdate } from './game'
+import type { TimelineEntry } from './incident/types'
 
 /** The fake browser's tabs. Locked ones can't be switched to (see `story/effects.ts`). */
 export type Tab = 'flack' | 'gitnub' | 'arghcd' | 'grafauxna' | 'pagerdoody' | 'inkwell'
@@ -61,3 +62,6 @@ export type GameEvent =
   /** Argh CD (#16): a manual sync or a history rollback. */
   | { type: 'appSynced'; app: string }
   | { type: 'appRolledBack'; app: string; historyId: string }
+  /** Incident (#31): the timeline recorder recorded something. Steps gate on `event.entry.kind`
+   * (`paged`, `acked`, `declared`, `recovered`, `resolved`, …). */
+  | { type: 'incidentRecorded'; entry: TimelineEntry }
