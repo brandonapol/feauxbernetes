@@ -6,6 +6,7 @@ import { useGame } from '../../store'
 import { Avatar } from '../shared/Avatar'
 import { Markdown } from '../shared/Markdown'
 import { clockTime } from '../shared/time'
+import { ImpactCounter, PauseButton, Scorecard, StatusComposer } from '../incident'
 import { AskKai } from './AskKai'
 import styles from './Flack.module.css'
 import { useChannels } from './useChannels'
@@ -35,6 +36,8 @@ export function ChannelView({ channelId }: { channelId: string }) {
   const dispatch = useGame((s) => s.dispatch)
   const isMentorChannel = useGame((s) => s.config.mentor?.channel === channelId)
   const endRef = useRef<HTMLDivElement>(null)
+  const incident = useGame((s) => s.game.incident.current)
+  const incidentHere = incident?.declaration?.channelId === channelId ? incident : undefined
 
   useLayoutEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
@@ -58,6 +61,12 @@ export function ChannelView({ channelId }: { channelId: string }) {
           {channel?.name ?? channelId}
         </h2>
         {channel?.topic && <p className={styles.topic}>{channel.topic}</p>}
+        {incidentHere && (
+          <div className={styles.incidentBar}>
+            <ImpactCounter incident={incidentHere} />
+            {incidentHere.phase === 'open' ? <PauseButton /> : <span>Resolved</span>}
+          </div>
+        )}
       </header>
 
       <div className={styles.messages} role="log" aria-live="polite" aria-relevant="additions">
@@ -92,6 +101,8 @@ export function ChannelView({ channelId }: { channelId: string }) {
       </div>
 
       {isMentorChannel && <AskKai />}
+      {incidentHere?.phase === 'open' && <StatusComposer />}
+      {incidentHere?.phase === 'resolved' && <Scorecard incident={incidentHere} />}
 
       <div className={styles.composer}>
         <input

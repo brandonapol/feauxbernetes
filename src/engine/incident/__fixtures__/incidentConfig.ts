@@ -83,7 +83,13 @@ export function incidentConfig(): GameConfig {
     characters: {
       ...base.characters,
       morgan: { id: 'morgan', name: 'Morgan Diaz', initials: 'MD', role: 'Lead', color: '#000' },
-      taylor: { id: 'taylor', name: 'Taylor Brooks', initials: 'TB', role: 'Support', color: '#000' },
+      taylor: {
+        id: 'taylor',
+        name: 'Taylor Brooks',
+        initials: 'TB',
+        role: 'Support',
+        color: '#000',
+      },
     },
     incident: incidentContent,
   }

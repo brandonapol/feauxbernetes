@@ -56,7 +56,10 @@ describe('scorecard', () => {
       ['timeToResolve', 'above', 'ttr above'],
       ['customersAffected', 'within', 'cust within'],
     ])
-    expect(rows[0]).toMatchObject({ label: 'Time to acknowledge', typical: { low: MINUTE, high: 5 * MINUTE } })
+    expect(rows[0]).toMatchObject({
+      label: 'Time to acknowledge',
+      typical: { low: MINUTE, high: 5 * MINUTE },
+    })
   })
 
   it('has no band or note for a missing number (and never a pass/fail)', () => {

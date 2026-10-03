@@ -43,7 +43,7 @@ export const INCIDENT_CONTENT: IncidentContent = {
             magnitude: 12,
             durationMs: Number.MAX_SAFE_INTEGER,
             behaviourFlag: 'couponDoubleDiscount',
-            logEnglish: "Checkouts with a coupon fail: the discount is applied twice.",
+            logEnglish: 'Checkouts with a coupon fail: the discount is applied twice.',
           },
         ],
       },
@@ -68,8 +68,7 @@ export const INCIDENT_CONTENT: IncidentContent = {
       {
         id: 'investigating-blame',
         componentState: 'outage',
-        message:
-          'A bad deploy by one of our engineers broke checkout. They are fixing it now.',
+        message: 'A bad deploy by one of our engineers broke checkout. They are fixing it now.',
         note: "Blames a person, and calls it a full outage when checkout without a coupon still works. Customers don't need either.",
       },
     ],
@@ -158,7 +157,8 @@ export const INCIDENT_CONTENT: IncidentContent = {
       notes: {
         below:
           'Faster than a typical team. Rolling back before finding the root cause is what bought this.',
-        within: 'A typical team. Rolling back sooner, before debugging, is the usual way to shrink it.',
+        within:
+          'A typical team. Rolling back sooner, before debugging, is the usual way to shrink it.',
         above:
           'Longer than most. Time spent proving the cause before rolling back is time customers were failing.',
       },
@@ -168,10 +168,10 @@ export const INCIDENT_CONTENT: IncidentContent = {
       low: 30 * MINUTE,
       high: 90 * MINUTE,
       notes: {
-        below:
-          'Quick. Make sure you watched long enough after the fix before calling it resolved.',
+        below: 'Quick. Make sure you watched long enough after the fix before calling it resolved.',
         within: 'A typical team: mitigate, watch for a while, then call it.',
-        above: 'Longer than most. Watching after the fix is good; leaving it open for hours is not.',
+        above:
+          'Longer than most. Watching after the fix is good; leaving it open for hours is not.',
       },
     },
     customersAffected: {

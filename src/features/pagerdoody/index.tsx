@@ -17,6 +17,7 @@ export function PagerDoody() {
   const dispatch = useDispatch()
   const player = useGame((s) => s.game.player.name) ?? 'You'
   const overlay = useGame((s) => s.game.ui.overlay)
+  const incident = useGame((s) => s.game.incident.current)
 
   return (
     <div className={styles.pager}>
@@ -42,7 +43,18 @@ export function PagerDoody() {
       </table>
 
       <h2>Incidents</h2>
-      <p className={styles.empty}>No incidents. That’s a good day.</p>
+      {incident ? (
+        <p>
+          <strong>{incident.declaration?.severity ?? 'Paged'}</strong> · {incident.service} ·{' '}
+          {incident.phase === 'resolved'
+            ? 'Resolved'
+            : incident.marks.acked !== undefined
+              ? 'Acknowledged'
+              : 'Triggered'}
+        </p>
+      ) : (
+        <p className={styles.empty}>No incidents. That’s a good day.</p>
+      )}
       <p className={styles.empty}>
         When a page lands it interrupts whatever you’re looking at — no sound, just the overlay.
         {overlay === 'page' ? ' One is open now.' : ''}

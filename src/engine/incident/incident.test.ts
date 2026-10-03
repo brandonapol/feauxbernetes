@@ -93,7 +93,10 @@ describe('timeline recorder', () => {
     // The effect form applies the same command and surfaces the event.
     const viaEffect = applyEffect(config, state, { type: 'incident', command: { kind: 'ack' } })
     expect(viaEffect.events).toEqual([
-      { type: 'incidentRecorded', entry: { at: state.clock.now, kind: 'acked', text: 'Acknowledged the page.' } },
+      {
+        type: 'incidentRecorded',
+        entry: { at: state.clock.now, kind: 'acked', text: 'Acknowledged the page.' },
+      },
     ])
   })
 
@@ -104,7 +107,7 @@ describe('timeline recorder', () => {
     expect(run(declared, cmd({ kind: 'ack' })).incident.current?.marks.acked).toBeUndefined()
   })
 
-  it('puts a GitNub revert on the open incident\'s timeline as a rollback', () => {
+  it("puts a GitNub revert on the open incident's timeline as a rollback", () => {
     const start = brokenBillingState(config)
     const withHistory: GameState = {
       ...start,
@@ -119,7 +122,11 @@ describe('timeline recorder', () => {
         type: 'openPR',
         repo: 'inkwell/deploy',
         title: 'billing 2.4.1',
-        change: { kind: 'wish', app: 'billing', wish: { app: 'billing', version: '2.4.1', copies: 2 } },
+        change: {
+          kind: 'wish',
+          app: 'billing',
+          wish: { app: 'billing', version: '2.4.1', copies: 2 },
+        },
       },
       { type: 'approvePR', prId: 'latest', reviewer: 'kai' },
       { type: 'mergePR', prId: 'latest' },
